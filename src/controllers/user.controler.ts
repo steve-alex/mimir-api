@@ -9,7 +9,7 @@ import {
   Body,
 } from '@nestjs/common';
 import { UserService } from '../services/user.service';
-import { CreateUserDTO, UpdateUserDTO } from '../types/types';
+import { CreateUserDTO, UpdateUserDTO, UserDTO } from '../types/types';
 
 @Controller('users')
 export class UserController {
@@ -17,7 +17,7 @@ export class UserController {
 
   @Get(':id')
   @HttpCode(200)
-  getUser(@Param() params): string {
+  async getUser(@Param() params): Promise<UserDTO> {
     try {
       return this.userService.getUser(params.id);
     } catch (error) {
@@ -27,7 +27,7 @@ export class UserController {
 
   @Post()
   @HttpCode(201)
-  createUser(@Body() user: CreateUserDTO): string {
+  async createUser(@Body() user: CreateUserDTO): Promise<UserDTO> {
     try {
       return this.userService.createUser(user);
     } catch (error) {
@@ -37,7 +37,7 @@ export class UserController {
 
   @Put()
   @HttpCode(200) // Update this to 204 if no content event response
-  updateUser(@Body() user: UpdateUserDTO): string {
+  async updateUser(@Body() user: UpdateUserDTO): Promise<UserDTO> {
     try {
       return this.userService.updateUser(user);
     } catch (error) {
@@ -47,9 +47,9 @@ export class UserController {
 
   @Delete(':id')
   @HttpCode(200) // Update this to 204 if no content event response
-  deleteUser(@Param() params): string {
+  async deleteUser(@Param() params): Promise<void> {
     try {
-      return this.userService.deleteUser(params.id);
+      await this.userService.deleteUser(Number(params.id));
     } catch (error) {
       throw new Error(''); // TODO - define error properly
     }

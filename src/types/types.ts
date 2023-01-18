@@ -1,9 +1,12 @@
+export class UserDTO {
+  id: number;
+  name: string;
+}
 export class CreateUserDTO {
   name: string;
-  email: number;
 }
 
 export class UpdateUserDTO {
+  id: number;
   name: string;
-  email: number;
 }
