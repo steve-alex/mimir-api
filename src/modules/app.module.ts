@@ -8,9 +8,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { User } from '../entities/user.entity';
+import { ContentModule } from './content.module';
 
 @Module({
   imports: [
+    ContentModule,
     UserModule,
     MLModule,
     NotionModule,
