@@ -10,3 +10,10 @@ export class UpdateUserDTO {
   id: number;
   name: string;
 }
+
+export interface NotionPageDetails {
+  title?: string;
+  categories?: string[];
+  summary?: string;
+  url?: string;
+}

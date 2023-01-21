@@ -10,7 +10,7 @@ export class ContentController {
     try {
       await this.contentService.createPage(req);
     } catch (err) {
-      console.log('error');
+      console.log('error =>', err.message);
     }
   }
 }
