@@ -12,9 +12,10 @@ export class NotionService {
   }
 
   async createPage(pageDetails: NotionPageDetails): Promise<void> {
-    const { title, categories, summary, url } = pageDetails;
+    const { title, author, categories, summary, url } = pageDetails;
 
     const multiSelect = categories.map((c) => ({ name: c }));
+    const pageContent = this.getPageContent(summary);
 
     await this.notion.pages.create({
       parent: {
@@ -31,6 +32,11 @@ export class NotionService {
             },
           ],
         },
+        Author: {
+          select: {
+            name: author,
+          },
+        },
         Categories: {
           multi_select: multiSelect,
         },
@@ -38,23 +44,26 @@ export class NotionService {
           url,
         },
       },
-      children: [
-        {
-          object: 'block',
-          type: 'paragraph',
-          paragraph: {
-            rich_text: [
-              {
-                text: {
-                  content: summary,
-                },
-              },
-            ],
-          },
-        },
-      ],
+      children: pageContent,
     });
-    return;
+  }
+
+  getPageContent(text: string) {
+    return text.split(`\n`).map((text) => {
+      return {
+        object: 'block',
+        type: 'paragraph',
+        paragraph: {
+          rich_text: [
+            {
+              text: {
+                content: text,
+              },
+            },
+          ],
+        },
+      };
+    });
   }
 
   async getAllItems() {

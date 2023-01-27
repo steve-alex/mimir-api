@@ -21,32 +21,35 @@ export class ContentService {
   }
 
   async getPageDetails(html: string): Promise<NotionPageDetails> {
-    const { title, content } = await this.parseTextFromHTML(html);
-
-    const [categories, summary] = await Promise.all([
-      this.insightService.categoriseText(content),
-      this.insightService.summariseText(content),
-    ]);
-
-    return { title, categories, summary };
+    const { title, content } = this.parseTextFromHTML(html);
+    const summary = await this.insightService.summariseText(content, 0.7);
+    const { author, categories } = await this.insightService.categoriseText(
+      summary,
+      0.1,
+    );
+    return { title, author, categories, summary };
   }
 
-  async parseTextFromHTML(
-    html: string,
-  ): Promise<{ title: string; content: string }> {
+  parseTextFromHTML(html: string): { title: string; content: string } {
     const $ = cheerio.load(html);
     const htmlElements = $('body')
       .find('p, h1, h2, h3, h4, h5, h6, li, a, span')
       .children();
 
-    const title = $('title').text() || 'Title';
-    let content = '';
+    const title = getTitle();
 
+    let content = '';
     htmlElements.each((index, element) => {
       content += extractText($(element));
     });
 
     return { title, content };
+
+    function getTitle() {
+      if (!$('title').text()) return 'Title';
+      if ($('title').text().length > 100) return $('title').text().slice(0, 99);
+      return $('title').text();
+    }
 
     function extractText(element): string {
       let text = '';

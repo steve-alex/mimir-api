@@ -13,6 +13,7 @@ export class UpdateUserDTO {
 
 export interface NotionPageDetails {
   title?: string;
+  author?: string;
   categories?: string[];
   summary?: string;
   url?: string;

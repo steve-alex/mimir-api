@@ -5,30 +5,41 @@ import { OpenAIService } from './openai.service';
 export class InsightService {
   constructor(@Inject(OpenAIService) private openAIService: OpenAIService) {}
 
-  async categoriseText(input: string): Promise<string[]> {
+  async categoriseText(
+    input: string,
+    temp?: number,
+  ): Promise<{ author: string; categories: string[] }> {
     try {
       const response = await this.openAIService.createCompletion(
-        `Label the following text with the FIVE most relevant broad categories that describe the content, return a single comma seperated line
+        `Categorise the following text with 5 relevant and broad categories. Label the author of the text. Return a single comma separated line with the author first.
         
         ${input}`,
+        temp,
       );
-
-      return response.data.choices[0].text
+      const parsedResponse = response.data.choices[0].text
         .split(',')
-        .filter((category) => category !== '')
-        .map((category) =>
-          category.replace(/(?:\r\n|\r|\n)/g, '').replace(/^\s+|\s+$/g, ''),
-        );
+        .filter((t) => t !== '')
+        .filter((t) => t.length < 99)
+        .map((t) => t.replace(/(?:\r\n|\r|\n)/g, '').replace(/^\s+|\s+$/g, '')); // TODO write comment describing all of this
+
+      const author = parsedResponse[0];
+      const categories = parsedResponse.slice(1, parsedResponse.length);
+
+      return {
+        author,
+        categories,
+      };
     } catch (err) {
       console.log('err =>', err.message);
     }
   }
 
-  async summariseText(text: string): Promise<string> {
+  async summariseText(text: string, temp?: number): Promise<string> {
     const response = await this.openAIService.createCompletion(
-      `How would you summarise this in a few sentences? Why?
+      `Summarise the main arguments from following text in up to a few paragraphs. Write in a style that increases the amount of information retained.
 
       ${text}`,
+      temp,
     );
 
     return response.data.choices[0].text;
