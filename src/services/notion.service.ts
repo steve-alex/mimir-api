@@ -12,10 +12,9 @@ export class NotionService {
   }
 
   async createPage(pageDetails: NotionPageDetails): Promise<void> {
-    const { title, author, categories, readingTime, summary, url } =
-      pageDetails;
+    const { title, creator, categories, time, summary, url } = pageDetails;
 
-    const multiSelect = categories.map((c) => ({ name: c }));
+    const multiSelect = categories ? categories.map((c) => ({ name: c })) : [];
     const pageContent = this.getPageContent(summary);
 
     await this.notion.pages.create({
@@ -33,9 +32,9 @@ export class NotionService {
             },
           ],
         },
-        Author: {
+        Creator: {
           select: {
-            name: author,
+            name: creator,
           },
         },
         Categories: {
@@ -44,11 +43,11 @@ export class NotionService {
         Link: {
           url,
         },
-        'Reading Time': {
+        Time: {
           rich_text: [
             {
               text: {
-                content: `${readingTime}`,
+                content: `${time}`,
               },
             },
           ],
@@ -64,21 +63,39 @@ export class NotionService {
   }
 
   getPageContent(text: string) {
-    return text.split(`\n`).map((text) => {
-      return {
+    if (text) {
+      return text.split(`\n`).map((text) => {
+        return {
+          object: 'block',
+          type: 'paragraph',
+          paragraph: {
+            rich_text: [
+              {
+                text: {
+                  content: text,
+                },
+              },
+            ],
+          },
+        };
+      });
+    }
+
+    return [
+      {
         object: 'block',
         type: 'paragraph',
         paragraph: {
           rich_text: [
             {
               text: {
-                content: text,
+                content: 'Summary',
               },
             },
           ],
         },
-      };
-    });
+      },
+    ];
   }
 
   async getAllItems() {

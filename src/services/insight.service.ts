@@ -1,52 +1,21 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { OpenAIService } from './openai.service';
-import { auth } from 'google-auth-library';
+import { WebpageDetails, YouTubeVideoInsights } from '../types/types';
 
 @Injectable()
 export class InsightService {
   constructor(@Inject(OpenAIService) private openAIService: OpenAIService) {}
 
-  async categoriseText(
-    input: string,
-    temp?: number,
-  ): Promise<{ categories: string[] }> {
-    try {
-      const response = await this.openAIService.createCompletion(
-        `Give the following text up to 5 relevant and broad categories. Return in the following format
-        {1},{2},{3},{4},{5}
-
-        ${input}`,
-        temp,
-      );
-
-      const categories = response.data.choices[0].text
-        .split(',')
-        .filter((t) => t !== '')
-        .filter((t) => t.length < 99)
-        .map((t) => t.replace(/(?:\r\n|\r|\n)/g, '').replace(/^\s+|\s+$/g, '')); // TODO write comment describing all of this
-
-      return { categories };
-    } catch (err) {
-      console.log('err =>', err.message);
-    }
-  }
-
-  /**
-   *
-   * @param text
-   * @param temp
-   * @returns
-   */
-  async summariseAndExtractMetaData(
+  async extractMetaDataFromWebpage(
     text: string,
     temp?: number,
-  ): Promise<{ author: string; readingTime: string; summary: string }> {
+  ): Promise<WebpageDetails> {
     if (text.length < 14000) {
       // API has a 'token' limit of 4000 which is roughly 16000 characters. Take away about 1000 for prompts and 1000 for peace of mind.
-      const { author, readingTime, summary } =
-        await this.runSummaryAndMetaDataExtraction(text, temp);
+      const { author, readingTime, categories, summary } =
+        await this.runWebpageMetaDataExtraction(text, temp);
 
-      return { author, readingTime, summary };
+      return { author, readingTime, categories, summary };
     }
 
     const chunks = [];
@@ -58,7 +27,7 @@ export class InsightService {
 
     const results: any = await Promise.all(
       chunks.map(async (chunk) =>
-        this.runSummaryAndMetaDataExtraction(chunk, temp),
+        this.runWebpageMetaDataExtraction(chunk, temp),
       ),
     );
 
@@ -67,94 +36,233 @@ export class InsightService {
       (acc, prev) => acc + prev?.readingTime,
       '',
     );
+    const categoriesChunks = results.reduce(
+      (acc, prev) => acc + prev?.categories,
+      '',
+    );
     const summaryChunks = results.reduce(
       (acc, prev) => acc + prev?.summary,
       '',
     );
 
-    const { author, readingTime, summary } =
+    const { author, readingTime, categories, summary } =
       await this.compileSummaryAndMetaData(
         authorChunks,
         readingTimeChunks,
+        categoriesChunks,
         summaryChunks,
         temp,
       );
 
-    return { author, readingTime, summary };
+    return { author, readingTime, categories, summary };
   }
 
-  async compileSummaryAndMetaData(
-    authorChunks: string,
-    readingTimeChunks: string,
-    summaryChunks: string,
-    temp?: number,
-  ): Promise<any> {
-    const response = await this.openAIService.createCompletion(
-      `1) Select the main author from the following options: ${authorChunks}.
-       2) Sum the total reading time from the following: ${readingTimeChunks}.
-       3) Compile the main arguments from the following using bullet points. Write in a style that increases the amount of information retained: ${summaryChunks}
-
-       Return in the following format:
-
-       Author: {1} \n
-       Reading Time: {2} \n
-       Summary: {3}`,
-      temp,
-    );
-
-    const author = response.data.choices[0].text
-      .split('\n')
-      .find((t) => t.includes('Author: '))
-      .split('Author: ')[1];
-
-    const readingTime = response.data.choices[0].text
-      .split('\n')
-      .find((t) => t.includes('Reading Time: '))
-      .split('Reading Time: ')[1];
-
-    const summary = response.data.choices[0].text.split('Summary: ')[1];
-
-    return {
-      author,
-      readingTime,
-      summary,
-    };
-  }
-
-  async runSummaryAndMetaDataExtraction(
+  async runWebpageMetaDataExtraction(
     text: string,
     temp?: number,
-  ): Promise<any> {
+  ): Promise<WebpageDetails> {
     //TODO - Update this so that users can update their reading speed!
     const response = await this.openAIService.createCompletion(
       `1) Does this text reference the main author? Yes? Return the author's name? No? Return ''.
        2) How long in minutes would this take to read for an extremely fast reader?
-       3) Summarise the arguments from following text in up to 300 words using bullet points. Write in a style that increases the amount of information retained.
-       
+       3) Tag the 5 most relevant and broad categories. Return in the following format {1},{2},{3},{4},{5}
+       4) Summarise the arguments from following text in up to 500 words using bullet points. Write in a style that increases the amount of information retained.
+
        Return in the following format
 
        Author: {1} \n
        Reading Time: {2} \n
-       Summary: {3}
+       Categories: {3} \n
+       Summary: {4}
       ${text}`,
       temp,
     );
 
     const author = response.data.choices[0].text
       .split('\n')
-      .find((t) => t.includes('Author: '))
-      .split('Author: ')[1];
+      .find((t) => t.includes('Author:'))
+      .split('Author:')[1];
 
     const readingTime = response.data.choices[0].text
       .split('\n')
-      .find((t) => t.includes('Reading Time: '))
-      .split('Reading Time: ')[1];
+      .find((t) => t.includes('Reading Time:'))
+      .split('Reading Time:')[1];
 
-    const summary = response.data.choices[0].text.split('Summary: ')[1];
+    const categories = response.data.choices[0].text
+      .split('\n')
+      .find((t) => t.includes('Categories:'))
+      .split('Categories:')[1]
+      .split(',')
+      .filter((t) => t !== '')
+      .filter((t) => t.length < 99)
+      .map((t) => t.replace(/(?:\r\n|\r|\n)/g, '').replace(/^\s+|\s+$/g, '')); // TODO write comment describing all of this
+
+    const summary = response.data.choices[0].text.split('Summary:')[1];
 
     return {
       author,
       readingTime,
+      categories,
+      summary,
+    };
+  }
+
+  async compileSummaryAndMetaData(
+    authorChunks: string,
+    readingTimeChunks: string,
+    categoriesChunks: string,
+    summaryChunks: string,
+    temp?: number,
+  ): Promise<WebpageDetails> {
+    const response = await this.openAIService.createCompletion(
+      `1) Select the main author from the following options: ${authorChunks}.
+       2) Sum the total reading time from the following: ${readingTimeChunks}.
+       3) Compile the 5 most relevant and broad categories from the following: ${categoriesChunks}. Return in the following format {1},{2},{3},{4},{5}
+       4) Compile the main arguments from the following text in up to 500 words using bullet points. Write in a style that increases the amount of information retained: ${summaryChunks}
+
+       Return in the following format:
+
+       Author: {1} \n
+       Reading Time: {2} \n
+       Categories: {3} \n
+       Summary: {4}`,
+      temp,
+    );
+
+    const author = response.data.choices[0].text
+      .split('\n')
+      .find((t) => t.includes('Author:'))
+      .split('Author:')[1];
+
+    const readingTime = response.data.choices[0].text
+      .split('\n')
+      .find((t) => t.includes('Reading Time:'))
+      .split('Reading Time:')[1];
+
+    const categories = response.data.choices[0].text
+      .split('\n')
+      .find((t) => t.includes('Categories:'))
+      .split('Categories:')[1]
+      .split(',')
+      .filter((t) => t !== '')
+      .filter((t) => t.length < 99)
+      .map((t) => t.replace(/(?:\r\n|\r|\n)/g, '').replace(/^\s+|\s+$/g, '')); // TODO write comment describing all of this
+
+    const summary = response.data.choices[0].text.split('Summary:')[1];
+
+    return {
+      author,
+      readingTime,
+      categories,
+      summary,
+    };
+  }
+
+  async extractYouTubeVideoInsights(
+    text: string,
+    temp?: number,
+  ): Promise<YouTubeVideoInsights> {
+    if (text.length < 14000) {
+      // API has a 'token' limit of 4000 which is roughly 16000 characters. Take away about 1000 for prompts and 1000 for peace of mind.
+      const { categories, summary } =
+        await this.runYouTubeVideoInsightsExtraction(text, temp);
+
+      return { categories, summary };
+    }
+
+    const chunks = [];
+    const chunkSize = this.getChunkSize(text.length);
+
+    for (let i = 0; i < text.length; i += chunkSize) {
+      chunks.push(text.slice(i, i + chunkSize));
+    }
+
+    const results: any = await Promise.all(
+      chunks.map(async (chunk) =>
+        this.runYouTubeVideoInsightsExtraction(chunk, temp),
+      ),
+    );
+
+    const categoriesChunks = results.reduce(
+      (acc, prev) => acc + prev?.categories,
+      '',
+    );
+    const summaryChunks = results.reduce(
+      (acc, prev) => acc + prev?.summary,
+      '',
+    );
+
+    const { categories, summary } = await this.compileYouTubeInsights(
+      categoriesChunks,
+      summaryChunks,
+      temp,
+    );
+
+    return { categories, summary };
+  }
+
+  async runYouTubeVideoInsightsExtraction(
+    text: string,
+    temp?: number,
+  ): Promise<YouTubeVideoInsights> {
+    const response = await this.openAIService.createCompletion(
+      `1) Tag the 5 most relevant and broad categories. Return in the following format {1},{2},{3},{4},{5}
+       2) Summarise the arguments from following text in up to 500 words using bullet points. Write in a style that increases the amount of information retained.
+
+       Return in the following format
+
+       Categories: {1} \n
+       Summary: {2}
+      ${text}`,
+      temp,
+    );
+
+    const categories = response.data.choices[0].text
+      .split('\n')
+      .find((t) => t.includes('Categories:'))
+      .split('Categories:')[1]
+      .split(',')
+      .filter((t) => t !== '')
+      .filter((t) => t.length < 99)
+      .map((t) => t.replace(/(?:\r\n|\r|\n)/g, '').replace(/^\s+|\s+$/g, '')); // TODO write comment describing all of this
+
+    const summary = response.data.choices[0].text.split('Summary:')[1];
+
+    return {
+      categories,
+      summary,
+    };
+  }
+
+  async compileYouTubeInsights(
+    categoriesChunks: string,
+    summaryChunks: string,
+    temp?: number,
+  ): Promise<YouTubeVideoInsights> {
+    const response = await this.openAIService.createCompletion(
+      `Compile the 5 most relevant and broad categories from the following: ${categoriesChunks}. Return in the following format {1},{2},{3},{4},{5}
+       Compile the main arguments from the following text in up to 500 words using bullet points. Write in a style that increases the amount of information retained: ${summaryChunks}
+
+       Return in the following format:
+
+       Categories: {1} \n
+       Summary: {2}`,
+      temp,
+    );
+
+    const categories = response.data.choices[0].text
+      .split('\n')
+      .find((t) => t.includes('Categories:'))
+      .split('Categories:')[1]
+      .split(',')
+      .filter((t) => t !== '')
+      .filter((t) => t.length < 99)
+      .map((t) => t.replace(/(?:\r\n|\r|\n)/g, '').replace(/^\s+|\s+$/g, '')); // TODO write comment describing all of this
+
+    const summary = response.data.choices[0].text.split('Summary:')[1];
+
+    return {
+      categories,
       summary,
     };
   }
