@@ -14,7 +14,13 @@ export class UpdateUserDTO {
 export interface NotionPageDetails {
   title?: string;
   author?: string;
+  readingTime?: string;
   categories?: string[];
   summary?: string;
   url?: string;
+}
+
+export enum ContentType {
+  YouTube = 'youtube',
+  WebPage = 'web-page',
 }

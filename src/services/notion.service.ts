@@ -12,7 +12,8 @@ export class NotionService {
   }
 
   async createPage(pageDetails: NotionPageDetails): Promise<void> {
-    const { title, author, categories, summary, url } = pageDetails;
+    const { title, author, categories, readingTime, summary, url } =
+      pageDetails;
 
     const multiSelect = categories.map((c) => ({ name: c }));
     const pageContent = this.getPageContent(summary);
@@ -42,6 +43,20 @@ export class NotionService {
         },
         Link: {
           url,
+        },
+        'Reading Time': {
+          rich_text: [
+            {
+              text: {
+                content: `${readingTime}`,
+              },
+            },
+          ],
+        },
+        Status: {
+          select: {
+            name: 'to read',
+          },
         },
       },
       children: pageContent,
