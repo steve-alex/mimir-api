@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { Configuration, OpenAIApi } from 'openai';
+import { Configuration, CreateCompletionResponse, OpenAIApi } from 'openai';
 
 @Injectable()
 export class OpenAIService {
-  openai;
+  openai: OpenAIApi;
 
   constructor() {
     const config = new Configuration({
@@ -18,42 +18,67 @@ export class OpenAIService {
   }
 
   /**
-   * TODO - Fill this out
-   * @param {*} prompt
-   * @param {*} temperature
-   * @param {*} maxTokens
-   * @returns
+   * Makes a call to Open AI's 'completion' API (https://platform.openai.com/docs/api-reference/completions)
+   * Returns GPT 3.5's response to a provided prompt
+   * @param prompt string: The text prompt to complete
+   * @param temperature number: The temperature value to control the randomness of the response
+   * @param maxTokens number: The maximum number of tokens in the response
+   *
+   * @returns Promise<any>
    */
   createCompletion = async (
     prompt: string,
-    temperature: any = 0.5,
-    maxTokens: any = 500,
-  ) => {
-    return this.openai.createCompletion({
-      model: 'text-davinci-003',
-      prompt,
-      temperature,
-      max_tokens: maxTokens,
-    });
+    temperature = 0.5,
+    maxTokens = 500,
+  ): Promise<any> => {
+    //TODO - make sure that prompt length is validated
+    try {
+      return this.openai.createCompletion({
+        model: 'text-davinci-003',
+        prompt,
+        temperature,
+        max_tokens: maxTokens,
+      });
+    } catch (error) {
+      throw new Error(`
+        Error creating completion: ${error.message} \n
+        Request Parameters:
+          prompt: ${prompt} \n
+          temperature: ${temperature} \n
+          maxTokens: ${maxTokens} \n`);
+    }
   };
 
   /**
-   * TODO - Fill this out
-   * @param {*} prompt
-   * @param {*} temperature
-   * @param {*} maxTokens
-   * @returns
+   * Makes a call to Open AI's GPT 3.5 'embedding' API (https://platform.openai.com/docs/api-reference/embeddings)
+   * Returns an 'embedding vector' of a provided prompt
+   * https://platform.openai.com/docs/guides/embeddings/what-are-embeddings
+   * @param prompt string: The text prompt to complete
+   * @param temperature number: The temperature value to control the randomness of the response
+   * @param maxTokens number: The maximum number of tokens in the response
+   *
+   * @returns Promise<any>
    */
   createEmbedding = async (
     prompt: string,
     temperature: any = 0.5,
     maxTokens: any = 500,
-  ) => {
-    return this.openai.createCompletion({
-      model: 'text-davinci-003',
-      prompt,
-      temperature,
-      max_tokens: maxTokens,
-    });
+  ): Promise<any> => {
+    //TODO - make sure that prompt length is validated
+    try {
+      return this.openai.createCompletion({
+        model: 'text-davinci-003',
+        prompt,
+        temperature,
+        max_tokens: maxTokens,
+      });
+    } catch (error) {
+      throw new Error(`
+      Error creating completion: ${error.message} \n
+      Request Parameters:
+        prompt: ${prompt} \n
+        temperature: ${temperature} \n
+        maxTokens: ${maxTokens} \n`);
+    }
   };
 }
