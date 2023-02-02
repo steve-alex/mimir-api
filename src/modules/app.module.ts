@@ -9,6 +9,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { ContentModule } from './content.module';
+import { AllExceptionsFilter } from '../shared/exceptions';
 
 @Module({
   imports: [
@@ -34,7 +35,10 @@ import { ContentModule } from './content.module';
     }),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    { provide: AllExceptionsFilter, useClass: AllExceptionsFilter },
+  ],
 })
 export class AppModule {
   constructor(private dataSource: DataSource) {}

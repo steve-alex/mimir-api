@@ -55,3 +55,9 @@ export enum ContentType {
   YouTube = 'youtube',
   WebPage = 'web-page',
 }
+
+export interface Response {
+  data?: any;
+  message: string;
+  statusCode: number;
+}

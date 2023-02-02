@@ -6,13 +6,8 @@ import { AllExceptionsFilter } from '../shared/exceptions';
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @UseFilters(AllExceptionsFilter)
   @Get()
   getHello(): string {
-    try {
-      return this.appService.getHello();
-    } catch (error) {
-      throw error;
-    }
+    return this.appService.getHello();
   }
 }

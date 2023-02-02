@@ -1,28 +1,27 @@
-import { Body, Controller, Get, Post, UseFilters } from '@nestjs/common';
+import { Body, Controller, Get, HttpStatus, Post } from '@nestjs/common';
 import { NotionService } from '../services/notion.service';
-import { AllExceptionsFilter } from '../shared/exceptions';
+import { NotionPageDetails, Response } from '../types/types';
 
 @Controller('notion')
 export class NotionController {
   constructor(private readonly notionService: NotionService) {}
 
-  @UseFilters(AllExceptionsFilter)
   @Get()
-  async getPages(): Promise<any> {
-    try {
-      return this.notionService.getAllItems();
-    } catch (error) {
-      throw error;
-    }
+  async getPages(): Promise<Response> {
+    const items = await this.notionService.getAllItems();
+    return {
+      data: items,
+      statusCode: HttpStatus.OK,
+      message: 'Pages successfully retreived',
+    };
   }
 
-  @UseFilters(AllExceptionsFilter)
   @Post()
-  async createPage(@Body() body: any): Promise<any> {
-    try {
-      await this.notionService.createPage(body);
-    } catch (error) {
-      throw error;
-    }
+  async createPage(@Body() body: NotionPageDetails): Promise<Response> {
+    await this.notionService.createPage(body);
+    return {
+      statusCode: HttpStatus.CREATED,
+      message: 'Notion page successfully created',
+    };
   }
 }
