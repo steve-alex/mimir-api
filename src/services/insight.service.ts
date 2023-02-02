@@ -66,14 +66,15 @@ export class InsightService {
       `1) Does this text reference the main author? Yes? Return the author's name? No? Return ''.
        2) How long in minutes would this take to read for an extremely fast reader?
        3) Tag the 5 most relevant and broad categories. Return in the following format {1},{2},{3},{4},{5}
-       4) Summarise the arguments from following text in up to 500 words using bullet points. Write in a style that increases the amount of information retained.
+       4) What are the main points in the follow text? Write in a descriptive format that maximises information retention. RETURN THE ANSWER AS BULLET POINTS.
 
-       Return in the following format
+       Return in the following format:
 
        Author: {1} \n
        Reading Time: {2} \n
        Categories: {3} \n
        Summary: {4}
+
       ${text}`,
       temp,
     );
@@ -118,7 +119,7 @@ export class InsightService {
       `1) Select the main author from the following options: ${authorChunks}.
        2) Sum the total reading time from the following: ${readingTimeChunks}.
        3) Compile the 5 most relevant and broad categories from the following: ${categoriesChunks}. Return in the following format {1},{2},{3},{4},{5}
-       4) Compile the main arguments from the following text in up to 500 words using bullet points. Write in a style that increases the amount of information retained: ${summaryChunks}
+       4) Compile the main bullet points from the following text: ${summaryChunks}. Write in a descriptive format that maximises information retention. RETURN THE ANSWER AS BULLET POINTS.
 
        Return in the following format:
 
@@ -207,13 +208,14 @@ export class InsightService {
   ): Promise<YouTubeVideoInsights> {
     const response = await this.openAIService.createCompletion(
       `1) Tag the 5 most relevant and broad categories. Return in the following format {1},{2},{3},{4},{5}
-       2) Summarise the arguments from following text in up to 500 words using bullet points. Write in a style that increases the amount of information retained.
+       2) What are the main points in the follow text? Write in a descriptive format that maximises information retention. RETURN THE ANSWER AS BULLET POINTS.
 
        Return in the following format
 
        Categories: {1} \n
        Summary: {2}
-      ${text}`,
+
+       ${text}`,
       temp,
     );
 
@@ -240,8 +242,8 @@ export class InsightService {
     temp?: number,
   ): Promise<YouTubeVideoInsights> {
     const response = await this.openAIService.createCompletion(
-      `Compile the 5 most relevant and broad categories from the following: ${categoriesChunks}. Return in the following format {1},{2},{3},{4},{5}
-       Compile the main arguments from the following text in up to 500 words using bullet points. Write in a style that increases the amount of information retained: ${summaryChunks}
+      `Combine the 5 most relevant and broad categories from the following: ${categoriesChunks}. Return in the following format {1},{2},{3},{4},{5}
+       Combine the bullet points from the following text: ${summaryChunks}. Write in a descriptive format that maximises information retention. RETURN THE ANSWER AS BULLET POINTS.
 
        Return in the following format:
 
