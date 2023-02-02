@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Client } from '@notionhq/client';
-import { NotionPageDetails } from '../types/types';
+import { Medium, NotionPageDetails } from '../types/types';
 
 @Injectable()
 export class NotionService {
@@ -12,7 +12,8 @@ export class NotionService {
   }
 
   async createPage(pageDetails: NotionPageDetails): Promise<void> {
-    const { title, creator, categories, time, summary, url } = pageDetails;
+    const { title, creator, categories, time, summary, url, medium } =
+      pageDetails;
 
     const multiSelect = categories ? categories.map((c) => ({ name: c })) : [];
     const pageContent = this.getPageContent(summary);
@@ -54,7 +55,12 @@ export class NotionService {
         },
         Status: {
           select: {
-            name: 'to read',
+            name: 'Inbox',
+          },
+        },
+        Medium: {
+          select: {
+            name: this.parseMedium(medium),
           },
         },
       },
@@ -62,7 +68,7 @@ export class NotionService {
     });
   }
 
-  getPageContent(text: string) {
+  private getPageContent(text: string) {
     if (text) {
       return text.split(`\n`).map((text) => {
         return {
@@ -96,6 +102,12 @@ export class NotionService {
         },
       },
     ];
+  }
+
+  private parseMedium(medium: Medium): string {
+    if (medium === Medium.WebPage) return 'Web Page';
+    if (medium === Medium.YouTube) return 'YouTube';
+    return 'Other';
   }
 
   async getAllItems() {
