@@ -14,11 +14,11 @@ export class UpdateUserDTO {
 export interface NotionPageDetails {
   title?: string;
   creator?: string;
-  time?: string;
-  categories?: string[];
-  summary?: string;
   url?: string;
   medium?: Medium;
+  categories?: string[];
+  summary?: string;
+  time?: string;
 }
 
 export enum Medium {
@@ -60,4 +60,13 @@ export interface Response {
   data?: any;
   message: string;
   statusCode: number;
+}
+
+// Controls the randomness of the response from GPT 3
+export enum Temperature {
+  Min = 0,
+  Low = 0.25,
+  Medium = 0.5,
+  High = 0.75,
+  Max = 1,
 }

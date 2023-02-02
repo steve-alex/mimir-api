@@ -7,8 +7,8 @@ export class ContentController {
   constructor(private readonly contentService: ContentService) {}
 
   @Post()
-  async createPage(@Req() req: Request): Promise<Response> {
-    await this.contentService.createPage(req);
+  async createContent(@Req() req: Request): Promise<Response> {
+    await this.contentService.createContent(req);
     return { statusCode: HttpStatus.OK, message: 'Page successfully created' };
   }
 }

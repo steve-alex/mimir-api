@@ -6,15 +6,11 @@ import {
   ContentType,
   Medium,
   NotionPageDetails,
+  Temperature,
   YouTubeVideoDetails,
   YouTubeVideoMetadata,
 } from '../types/types';
-import { google } from 'googleapis';
-import fs from 'fs';
-import { response } from 'express';
 import YoutubeTranscript from 'youtube-transcript';
-import * as TextStatistics from 'text-statistics';
-import { isEmpty } from 'rxjs';
 
 @Injectable()
 export class ContentService {
@@ -23,34 +19,43 @@ export class ContentService {
     @Inject(InsightService) private insightService: InsightService,
   ) {}
 
-  async createPage(req: any): Promise<void> {
-    const pageDetails = await this.getPageDetails(req.body.url, req.body.html);
+  async createContent(req: any): Promise<void> {
+    console.log('createPage!');
+    const contentDetails = await this.getContentDetails(req.body);
+    // eslint-disable-next-line prettier/prettier
+    console.log('🚀 ~ file: content.service.ts:29 ~ ContentService ~ createPage ~ contentDetails', contentDetails);
 
     await Promise.all([
-      this.storeContent(pageDetails),
-      this.notionService.createPage({ url: req.body.url, ...pageDetails }),
+      this.storeContent(contentDetails),
+      this.notionService.createPage({ url: req.body.url, ...contentDetails }),
     ]);
   }
 
-  async getPageDetails(url: string, html: string): Promise<NotionPageDetails> {
+  private async getContentDetails(body: {
+    url: string;
+    html: string;
+  }): Promise<NotionPageDetails> {
+    const { url, html } = body;
     const contentType = this.getContentType(url);
+    // eslint-disable-next-line prettier/prettier
+    console.log('🚀 ~ file: content.service.ts:42 ~ ContentService ~ getPageDetails ~ contentType', contentType);
 
     if (contentType === ContentType.WebPage) {
       const { title, content } = this.getWebpageTitleAndContent(html);
       // TODO - turn temperature into enum. Also consider if this should even be here? Should this be lower down?
-      const { summary, author, readingTime, categories } =
-        await this.insightService.extractMetaDataFromWebpage(
+      const { author, categories, summary, readingTime } =
+        await this.insightService.extractInsightsAndMetaDataFromWebpage(
           `${title} ${content}`,
-          0.3,
+          Temperature.Low,
         );
 
       return {
         title,
         creator: author,
-        categories,
-        time: readingTime,
-        summary,
         medium: Medium.WebPage,
+        categories,
+        summary,
+        time: readingTime,
       };
     }
 
@@ -60,16 +65,18 @@ export class ContentService {
 
       return {
         title,
-        time: videoLength,
         creator,
-        summary,
-        categories,
         medium: Medium.YouTube,
+        categories,
+        summary,
+        time: videoLength,
       };
     }
   }
 
-  async getYouTubeVideoDetails(url: string): Promise<YouTubeVideoDetails> {
+  private async getYouTubeVideoDetails(
+    url: string,
+  ): Promise<YouTubeVideoDetails> {
     const videoId = url.split('v=')[1];
 
     const [transcript, { title, creator, videoLength }] = await Promise.all([
@@ -169,7 +176,7 @@ export class ContentService {
     return ContentType.WebPage;
   }
 
-  async storeContent(parsedHTML: any): Promise<void> {
+  private async storeContent(parsedHTML: any): Promise<void> {
     return;
   }
 }
