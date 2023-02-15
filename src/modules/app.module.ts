@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { AppController } from '../controllers/app.controller';
 import { AppService } from '../services/app.service';
 import { UserModule } from './user.module';
-import { MLModule } from './ml.module';
+import { InisghtsModule } from './insights.module';
 import { NotionModule } from './notion.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -10,12 +10,13 @@ import { DataSource } from 'typeorm';
 import { User } from '../entities/user.entity';
 import { ContentModule } from './content.module';
 import { AllExceptionsFilter } from '../shared/exceptions';
+import PocketBase from 'pocketbase';
 
 @Module({
   imports: [
     ContentModule,
     UserModule,
-    MLModule,
+    InisghtsModule,
     NotionModule,
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
@@ -38,6 +39,12 @@ import { AllExceptionsFilter } from '../shared/exceptions';
   providers: [
     AppService,
     { provide: AllExceptionsFilter, useClass: AllExceptionsFilter },
+    {
+      provide: 'POCKET_BASE',
+      useFactory: () => {
+        return new PocketBase('http://127.0.0.1:8090');
+      },
+    },
   ],
 })
 export class AppModule {
