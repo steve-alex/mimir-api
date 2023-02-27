@@ -11,10 +11,6 @@ export class AuthService {
   ) {}
   async validateAccount(email: string, password: string): Promise<any> {
     const account = await this.accountService.getAccount({ email });
-    console.log(
-      '🚀 ~ file: auth.service.ts:14 ~ AuthService ~ validateAccount ~ account',
-      account,
-    );
     if (!account) return null;
     const passwordValid = await bcrypt.compare(password, account.password);
     if (!account) {
