@@ -1,9 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import { CreateUserDTO, UserDTO } from '../../types/types';
 import { Repository } from 'typeorm';
 import { Account } from './account.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
+import { AccountDTO, CreatAccountDTO } from './account.type';
 
 @Injectable()
 export class AccountService {
@@ -12,7 +12,7 @@ export class AccountService {
     private accountRepository: Repository<Account>,
   ) {}
 
-  async getAccount(account: UserDTO): Promise<UserDTO> {
+  async getAccount(account: AccountDTO): Promise<AccountDTO> {
     const { id, name, email, password } = account;
     // TODO move this to different function
     const searchParams: any = {};
@@ -23,7 +23,7 @@ export class AccountService {
     return this.accountRepository.findOneBy(searchParams);
   }
 
-  async createAccount(userDetails: CreateUserDTO): Promise<UserDTO> {
+  async createAccount(userDetails: CreatAccountDTO): Promise<AccountDTO> {
     const { name, email, password } = userDetails;
     const saltOrRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltOrRounds);
