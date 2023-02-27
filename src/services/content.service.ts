@@ -31,10 +31,6 @@ export class ContentService {
       url: req.body.url,
       ...contentDetails,
     });
-    console.log(
-      '🚀 ~ file: content.service.ts:37 ~ ContentService ~ createContent ~ pageDetails:',
-      pageDetails,
-    );
 
     if (status === 'SUCCESS') {
       await this.storeContent(pageDetails);
@@ -149,7 +145,7 @@ export class ContentService {
   async storeContent(contentDetails: any): Promise<any> {
     try {
       const parsedContentDetails = {
-        category_ids: contentDetails.categoryIds,
+        category_ids: contentDetails.categoryIds.map((item) => item.id),
         title: contentDetails.title,
         creator: contentDetails.creator,
         url: contentDetails.url,

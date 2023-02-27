@@ -15,61 +15,67 @@ export class NotionService {
     const { title, creator, categories, time, summary, url, medium } =
       pageDetails;
     const categoryIds = await this.retrieveCategoryIds(categories);
-
     const pageContent = this.getPageContent(summary);
 
-    const response = await this.notion.pages.create({
-      parent: {
-        type: 'database_id',
-        database_id: process.env.NOTION_MAIN_DB_ID,
-      },
-      properties: {
-        Name: {
-          title: [
-            {
-              text: {
-                content: title,
+    try {
+      await this.notion.pages.create({
+        parent: {
+          type: 'database_id',
+          database_id: process.env.NOTION_MAIN_DB_ID,
+        },
+        properties: {
+          Name: {
+            title: [
+              {
+                text: {
+                  content: title,
+                },
               },
-            },
-          ],
-        },
-        Creator: {
-          select: {
-            name: creator,
+            ],
           },
-        },
-        Categories: {
-          relation: categoryIds,
-        },
-        Link: {
-          url,
-        },
-        Time: {
-          rich_text: [
-            {
-              text: {
-                content: `${time}`,
+          Creator: {
+            select: {
+              name: creator,
+            },
+          },
+          Categories: {
+            relation: categoryIds,
+          },
+          Link: {
+            url,
+          },
+          Time: {
+            rich_text: [
+              {
+                text: {
+                  content: `${time}`,
+                },
               },
+            ],
+          },
+          Status: {
+            select: {
+              name: 'Inbox',
             },
-          ],
-        },
-        Status: {
-          select: {
-            name: 'Inbox',
+          },
+          Medium: {
+            select: {
+              name: this.parseMedium(medium),
+            },
           },
         },
-        Medium: {
-          select: {
-            name: this.parseMedium(medium),
-          },
-        },
-      },
-      children: pageContent,
-    });
+        children: pageContent,
+      });
+    } catch (err) {
+      return {
+        pageDetails: null,
+        status: 'ERROR',
+      };
+    }
 
     return {
       pageDetails: { ...pageDetails, categoryIds },
-      status: response.status === 201 ? 'SUCCESS' : 'ERROR',
+      status: 'SUCCESS',
     };
   }
 

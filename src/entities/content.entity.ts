@@ -25,7 +25,7 @@ export class Content {
   account: Account;
 
   @Column()
-  name: string;
+  title: string;
 
   @Column()
   summary: string;
@@ -36,14 +36,14 @@ export class Content {
   @Column('text', { array: true })
   categories: string[];
 
-  @Column('simple-array')
-  category_ids: number[];
+  @Column('text', { array: true })
+  category_ids: string[];
 
   @Column()
-  link: string;
+  url: string;
 
   @Column()
-  time: number;
+  time: string;
 
   @Column({
     type: 'enum',
