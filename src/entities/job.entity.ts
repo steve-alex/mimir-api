@@ -7,7 +7,7 @@ import {
   OneToOne,
   JoinColumn,
 } from 'typeorm';
-import { Account } from './account.entity';
+import { Account } from '../models/accounts/account.entity';
 
 export enum JobStatus {
   Pending = 'pending',

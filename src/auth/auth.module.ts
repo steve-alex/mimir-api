@@ -1,14 +1,14 @@
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { AccountService } from '../services/account.service';
+import { AccountService } from '../models/accounts/account.service';
 import { JwtModule } from '@nestjs/jwt';
-import { Account } from '../entities/account.entity';
+import { Account } from '../models/accounts/account.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './local.auth';
 import { JwtStrategy } from './jwt.auth';
-import { AccountModule } from '../modules/account.module';
+import { AccountModule } from '../models/accounts/account.module';
 
 @Module({
   imports: [

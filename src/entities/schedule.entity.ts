@@ -7,7 +7,7 @@ import {
   OneToOne,
   JoinColumn,
 } from 'typeorm';
-import { Account } from './account.entity';
+import { Account } from '../models/accounts/account.entity';
 
 @Entity({ name: 'schedule' })
 export class Schedule {

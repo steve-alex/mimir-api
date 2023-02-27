@@ -7,9 +7,9 @@ import {
   Body,
   UseFilters,
 } from '@nestjs/common';
-import { AccountService } from '../services/account.service';
-import { CreateUserDTO, UserDTO } from '../types/types';
-import { AllExceptionsFilter } from '../shared/exceptions';
+import { AccountService } from './account.service';
+import { CreateUserDTO, UserDTO } from '../../types/types';
+import { AllExceptionsFilter } from '../../shared/exceptions';
 
 @Controller('account')
 export class AccountController {

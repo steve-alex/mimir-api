@@ -7,7 +7,7 @@ import {
   ManyToOne,
 } from 'typeorm';
 import { Medium } from '../types/types';
-import { Account } from './account.entity';
+import { Account } from '../models/accounts/account.entity';
 
 export enum Status {
   Inbox = 'inbox',
