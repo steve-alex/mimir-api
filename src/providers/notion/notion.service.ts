@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Client } from '@notionhq/client';
-import { Medium, NotionPageDetails } from '../types/types';
+import { Medium, NotionPageDetails } from '../../types/types';
 
 @Injectable()
 export class NotionService {

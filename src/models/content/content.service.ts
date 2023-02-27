@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { NotionService } from '../../services/notion.service';
+import { NotionService } from '../../providers/notion/notion.service';
 import { InsightService } from '../../services/insight.service';
 import {
   ContentType,

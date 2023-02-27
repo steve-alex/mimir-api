@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { ContentService } from './content.service';
 import { ContentController } from './content.controller';
-import { NotionService } from '../../services/notion.service';
+import { NotionService } from '../../providers/notion/notion.service';
 import { InsightService } from '../../services/insight.service';
 import { InisghtsModule } from '../../modules/insights.module';
-import { NotionModule } from '../../modules/notion.module';
+import { NotionModule } from '../../providers/notion/notion.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Content } from './content.entity';
 

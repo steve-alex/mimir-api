@@ -1,5 +1,5 @@
 import { Body, Controller, Get, HttpStatus, Post } from '@nestjs/common';
-import { NotionService } from '../services/notion.service';
+import { NotionService } from '../providers/notion/notion.service';
 import { NotionPageDetails, Response } from '../types/types';
 
 @Controller('notion')
