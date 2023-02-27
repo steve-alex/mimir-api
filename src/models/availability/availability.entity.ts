@@ -6,7 +6,7 @@ import {
   Repository,
   ManyToOne,
 } from 'typeorm';
-import { Account } from '../models/accounts/account.entity';
+import { Account } from '../accounts/account.entity';
 
 @Entity({ name: 'availability' })
 export class Availability {

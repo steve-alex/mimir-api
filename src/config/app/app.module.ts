@@ -15,9 +15,12 @@ import {
 import {
   Availability,
   AvailabilityRepository,
-} from '../../entities/availability.entity';
-import { Job, JobRepository } from '../../entities/job.entity';
-import { Schedule, ScheduleRepository } from '../../entities/schedule.entity';
+} from '../../models/availability/availability.entity';
+import { Job, JobRepository } from '../../models/job/job.entity';
+import {
+  Schedule,
+  ScheduleRepository,
+} from '../../models/schedule/schedule.entity';
 import { AppService } from './app.service';
 import {
   Account,
