@@ -1,9 +1,13 @@
 export class UserDTO {
-  id: number;
-  name: string;
+  id?: number;
+  name?: string;
+  email?: string;
+  password?: string;
 }
 export class CreateUserDTO {
   name: string;
+  email?: string;
+  password?: string;
 }
 
 export class UpdateUserDTO {
@@ -27,6 +31,7 @@ export enum Medium {
 }
 
 export interface WebpageDetails {
+  title?: string; //TODO change this!
   author: string;
   readingTime: string;
   categories: string[];
