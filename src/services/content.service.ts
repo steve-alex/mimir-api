@@ -1,5 +1,4 @@
 import { Inject, Injectable } from '@nestjs/common';
-import * as cheerio from 'cheerio';
 import { NotionService } from './notion.service';
 import { InsightService } from './insight.service';
 import {
@@ -40,14 +39,10 @@ export class ContentService {
     // eslint-disable-next-line prettier/prettier
     console.log('🚀 ~ file: content.service.ts:42 ~ ContentService ~ getPageDetails ~ contentType', contentType);
 
+    // TODO - At what level of concerns should the temperature
     if (contentType === ContentType.WebPage) {
-      const { title, content } = this.getWebpageTitleAndContent(html);
-      // TODO - turn temperature into enum. Also consider if this should even be here? Should this be lower down?
-      const { author, categories, summary, readingTime } =
-        await this.insightService.extractInsightsAndMetaDataFromWebpage(
-          `${title} ${content}`,
-          Temperature.Low,
-        );
+      const { title, author, categories, summary, readingTime } =
+        await this.insightService.getWebPageDetails(html, Temperature.Low);
 
       return {
         title,
@@ -60,7 +55,7 @@ export class ContentService {
     }
 
     if (contentType === ContentType.YouTube) {
-      const { title, creator, videoLength, categories, summary } =
+      const { title, creator, categories, summary, videoLength } =
         await this.getYouTubeVideoDetails(url);
 
       return {
@@ -130,42 +125,6 @@ export class ContentService {
       const hours = length.split('H')[0].split('PT')[1];
 
       return `${hours} Hour${Number(hours) > 1 ? 's' : ''} ${minutes} Minutes`;
-    }
-  }
-
-  private getWebpageTitleAndContent(html: string): {
-    title: string;
-    content: string;
-  } {
-    const $ = cheerio.load(html);
-    const htmlElements = $('body')
-      .find('p, h1, h2, h3, h4, h5, h6, li, a, span')
-      .children();
-
-    const title = getTitle();
-
-    let content = '';
-    htmlElements.each((index, element) => {
-      content += extractText($(element));
-    });
-
-    return { title, content };
-
-    function getTitle() {
-      if (!$('title').text()) return 'Title';
-      if ($('title').text().length > 100) return $('title').text().slice(0, 99);
-      return $('title').text();
-    }
-
-    function extractText(element): string {
-      let text = '';
-      if (element.text()) {
-        text += element.text();
-      }
-      element.children().each((i, child) => {
-        text += extractText($(child));
-      });
-      return text;
     }
   }
 

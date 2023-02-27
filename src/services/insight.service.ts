@@ -1,21 +1,25 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { OpenAIService } from './openai.service';
 import { WebpageDetails, YouTubeVideoInsights } from '../types/types';
+import * as cheerio from 'cheerio';
 
 @Injectable()
 export class InsightService {
   constructor(@Inject(OpenAIService) private openAIService: OpenAIService) {}
 
-  async extractMetaDataFromWebpage(
-    text: string,
+  async getWebPageDetails(
+    html: string,
     temp?: number,
   ): Promise<WebpageDetails> {
+    const { title, content } = this.getWebpageTitleAndContent(html);
+    const text = `${title} ${content}`;
+
     if (text.length < 14000) {
       // API has a 'token' limit of 4000 which is roughly 16000 characters. Take away about 1000 for prompts and 1000 for peace of mind.
       const { author, readingTime, categories, summary } =
         await this.runWebpageMetaDataExtraction(text, temp);
 
-      return { author, readingTime, categories, summary };
+      return { title, author, readingTime, categories, summary };
     }
 
     const chunks = [];
@@ -57,6 +61,42 @@ export class InsightService {
     return { author, readingTime, categories, summary };
   }
 
+  private getWebpageTitleAndContent(html: string): {
+    title: string;
+    content: string;
+  } {
+    const $ = cheerio.load(html);
+    const htmlElements = $('body')
+      .find('p, h1, h2, h3, h4, h5, h6, li, a, span')
+      .children();
+
+    const title = getTitle();
+
+    let content = '';
+    htmlElements.each((index, element) => {
+      content += extractText($(element));
+    });
+
+    return { title, content };
+
+    function getTitle() {
+      if (!$('title').text()) return 'Title';
+      if ($('title').text().length > 100) return $('title').text().slice(0, 99);
+      return $('title').text();
+    }
+
+    function extractText(element): string {
+      let text = '';
+      if (element.text()) {
+        text += element.text();
+      }
+      element.children().each((i, child) => {
+        text += extractText($(child));
+      });
+      return text;
+    }
+  }
+
   async runWebpageMetaDataExtraction(
     text: string,
     temp?: number,
@@ -66,7 +106,7 @@ export class InsightService {
       `1) Does this text reference the main author? Yes? Return the author's name? No? Return ''.
        2) How long in minutes would this take to read for an extremely fast reader?
        3) Tag the 5 most relevant and broad categories. Return in the following format {1},{2},{3},{4},{5}
-       4) What are the main points in the follow text? Write in a descriptive format that maximises information retention. RETURN THE ANSWER AS BULLET POINTS.
+       4) Write a detailed description of the points from the following text in a style that maximises information retention. RETURN THE ANSWER AS BULLET POINTS.
 
        Return in the following format:
 
@@ -208,7 +248,7 @@ export class InsightService {
   ): Promise<YouTubeVideoInsights> {
     const response = await this.openAIService.createCompletion(
       `1) Tag the 5 most relevant and broad categories. Return in the following format {1},{2},{3},{4},{5}
-       2) What are the main points in the follow text? Write in a descriptive format that maximises information retention. RETURN THE ANSWER AS BULLET POINTS.
+       2) Write a detailed description of the points from the following text in a style that maximises information retention. RETURN THE ANSWER AS BULLET POINTS.
 
        Return in the following format
 
