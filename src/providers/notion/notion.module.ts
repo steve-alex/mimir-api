@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { NotionService } from './notion.service';
-import { NotionController } from '../../controllers/notion.controller';
+import { NotionController } from './notion.controller';
 
 @Module({
   imports: [],

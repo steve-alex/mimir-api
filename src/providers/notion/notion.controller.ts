@@ -1,6 +1,6 @@
 import { Body, Controller, Get, HttpStatus, Post } from '@nestjs/common';
-import { NotionService } from '../providers/notion/notion.service';
-import { NotionPageDetails, Response } from '../types/types';
+import { NotionService } from './notion.service';
+import { NotionPageDetails, Response } from '../../types/types';
 
 @Controller('notion')
 export class NotionController {
