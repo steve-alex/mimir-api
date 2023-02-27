@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { OpenAIService } from '../services/openai.service';
-import { InsightService } from '../services/insight.service';
+import { OpenAIService } from '../openai/openai.service';
+import { InsightService } from './insight.service';
 
 @Module({
   imports: [],

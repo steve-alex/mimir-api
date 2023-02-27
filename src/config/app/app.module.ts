@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AccountModule } from '../../models/accounts/account.module';
-import { InisghtsModule } from '../../modules/insights.module';
+import { InisghtsModule } from '../../providers/insights/insights.module';
 import { NotionModule } from '../../providers/notion/notion.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';

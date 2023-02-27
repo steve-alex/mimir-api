@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { OpenAIService } from './openai.service';
-import { WebpageDetails, YouTubeVideoInsights } from '../types/types';
+import { OpenAIService } from '../openai/openai.service';
+import { WebpageDetails, YouTubeVideoInsights } from '../../types/types';
 import * as cheerio from 'cheerio';
 
 @Injectable()

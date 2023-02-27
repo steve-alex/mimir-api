@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { NotionService } from '../../providers/notion/notion.service';
-import { InsightService } from '../../services/insight.service';
+import { InsightService } from '../../providers/insights/insight.service';
 import {
   ContentType,
   Medium,
