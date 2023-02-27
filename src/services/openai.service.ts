@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { Configuration, CreateCompletionResponse, OpenAIApi } from 'openai';
+import { Configuration, OpenAIApi } from 'openai';
+import { Temperature } from '../types/types';
 
 @Injectable()
 export class OpenAIService {
@@ -28,7 +29,7 @@ export class OpenAIService {
    */
   createCompletion = async (
     prompt: string,
-    temperature = 0.5,
+    temperature = Temperature.Low,
     maxTokens = 500,
   ): Promise<any> => {
     //TODO - make sure that prompt length is validated
@@ -61,7 +62,7 @@ export class OpenAIService {
    */
   createEmbedding = async (
     prompt: string,
-    temperature: any = 0.5,
+    temperature: any = Temperature.Low,
     maxTokens: any = 500,
   ): Promise<any> => {
     //TODO - make sure that prompt length is validated
