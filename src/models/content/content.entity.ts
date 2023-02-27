@@ -6,8 +6,8 @@ import {
   Column,
   ManyToOne,
 } from 'typeorm';
-import { Medium } from '../types/types';
-import { Account } from '../models/accounts/account.entity';
+import { Medium } from '../../types/types';
+import { Account } from '../accounts/account.entity';
 
 export enum Status {
   Inbox = 'inbox',

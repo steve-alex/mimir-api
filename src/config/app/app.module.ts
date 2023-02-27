@@ -6,10 +6,13 @@ import { NotionModule } from '../../modules/notion.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { ContentModule } from '../../modules/content.module';
+import { ContentModule } from '../../models/content/content.module';
 import { AllExceptionsFilter } from '../../shared/exceptions';
 import { AuthModule } from '../../auth/auth.module';
-import { Content, ContentRepository } from '../../entities/content.entity';
+import {
+  Content,
+  ContentRepository,
+} from '../../models/content/content.entity';
 import {
   Availability,
   AvailabilityRepository,

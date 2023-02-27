@@ -1,16 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { NotionService } from './notion.service';
-import { InsightService } from './insight.service';
+import { NotionService } from '../../services/notion.service';
+import { InsightService } from '../../services/insight.service';
 import {
   ContentType,
   Medium,
   Temperature,
   YouTubeVideoDetails,
   YouTubeVideoMetadata,
-} from '../types/types';
+} from '../../types/types';
 import YoutubeTranscript from 'youtube-transcript';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Content } from '../entities/content.entity';
+import { Content } from './content.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()

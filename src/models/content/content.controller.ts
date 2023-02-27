@@ -1,6 +1,6 @@
 import { Controller, HttpStatus, Post, Req, Request } from '@nestjs/common';
-import { ContentService } from '../services/content.service';
-import { Response } from '../types/types';
+import { ContentService } from './content.service';
+import { Response } from '../../types/types';
 
 @Controller('content')
 export class ContentController {
