@@ -4,18 +4,21 @@ import { InsightService } from './insight.service';
 import {
   ContentType,
   Medium,
-  NotionPageDetails,
   Temperature,
   YouTubeVideoDetails,
   YouTubeVideoMetadata,
 } from '../types/types';
 import YoutubeTranscript from 'youtube-transcript';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Content } from '../entities/content.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class ContentService {
   constructor(
     @Inject(NotionService) private notionService: NotionService,
     @Inject(InsightService) private insightService: InsightService,
+    @InjectRepository(Content) private contentRepository: Repository<Content>,
   ) {}
 
   async createContent(req: any): Promise<void> {
@@ -24,16 +27,24 @@ export class ContentService {
     // eslint-disable-next-line prettier/prettier
     console.log('🚀 ~ file: content.service.ts:29 ~ ContentService ~ createPage ~ contentDetails', contentDetails);
 
-    await Promise.all([
-      this.storeContent(contentDetails),
-      this.notionService.createPage({ url: req.body.url, ...contentDetails }),
-    ]);
+    const { pageDetails, status } = await this.notionService.createPage({
+      url: req.body.url,
+      ...contentDetails,
+    });
+    console.log(
+      '🚀 ~ file: content.service.ts:37 ~ ContentService ~ createContent ~ pageDetails:',
+      pageDetails,
+    );
+
+    if (status === 'SUCCESS') {
+      await this.storeContent(pageDetails);
+    }
   }
 
   private async getContentDetails(body: {
     url: string;
     html: string;
-  }): Promise<NotionPageDetails> {
+  }): Promise<any> {
     const { url, html } = body;
     const contentType = this.getContentType(url);
     // eslint-disable-next-line prettier/prettier
@@ -135,8 +146,21 @@ export class ContentService {
     return ContentType.WebPage;
   }
 
-  async storeContent(contentDetails: any): Promise<void> {
-    //TODO - create a type for contentDetails!
-    return;
+  async storeContent(contentDetails: any): Promise<any> {
+    try {
+      const parsedContentDetails = {
+        category_ids: contentDetails.categoryIds,
+        title: contentDetails.title,
+        creator: contentDetails.creator,
+        url: contentDetails.url,
+        medium: contentDetails.medium,
+        categories: contentDetails.categories,
+        summary: contentDetails.summary,
+        time: contentDetails.time,
+      };
+      return this.contentRepository.insert(parsedContentDetails);
+    } catch (err) {
+      throw new Error(err.message);
+    }
   }
 }

@@ -1,18 +1,17 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Client } from '@notionhq/client';
 import { Medium, NotionPageDetails } from '../types/types';
-import { ContentService } from './content.service';
 
 @Injectable()
 export class NotionService {
   notion;
   baseUrl = 'https://api.notion.com/v1';
 
-  constructor(@Inject(ContentService) private contentService: ContentService) {
+  constructor() {
     this.notion = new Client({ auth: process.env.NOTION_API_KEY });
   }
 
-  async createPage(pageDetails: NotionPageDetails): Promise<void> {
+  async createPage(pageDetails: NotionPageDetails): Promise<any> {
     const { title, creator, categories, time, summary, url, medium } =
       pageDetails;
     const categoryIds = await this.retrieveCategoryIds(categories);
@@ -68,9 +67,10 @@ export class NotionService {
       children: pageContent,
     });
 
-    if (response.status === 201) {
-      await this.contentService.storeContent({ ...pageDetails, categoryIds });
-    }
+    return {
+      pageDetails: { ...pageDetails, categoryIds },
+      status: response.status === 201 ? 'SUCCESS' : 'ERROR',
+    };
   }
 
   private getPageContent(text: string) {

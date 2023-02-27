@@ -6,5 +6,6 @@ import { InsightService } from '../services/insight.service';
   imports: [],
   controllers: [],
   providers: [OpenAIService, InsightService],
+  exports: [InsightService, OpenAIService],
 })
 export class InisghtsModule {}

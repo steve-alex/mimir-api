@@ -36,6 +36,9 @@ export class Content {
   @Column('text', { array: true })
   categories: string[];
 
+  @Column('simple-array')
+  category_ids: number[];
+
   @Column()
   link: string;
 

@@ -3,11 +3,14 @@ import { ContentService } from '../services/content.service';
 import { ContentController } from '../controllers/content.controller';
 import { NotionService } from '../services/notion.service';
 import { InsightService } from '../services/insight.service';
-import { OpenAIService } from '../services/openai.service';
+import { InisghtsModule } from './insights.module';
+import { NotionModule } from './notion.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Content } from '../entities/content.entity';
 
 @Module({
-  imports: [],
+  imports: [NotionModule, InisghtsModule, TypeOrmModule.forFeature([Content])],
   controllers: [ContentController],
-  providers: [ContentService, NotionService, InsightService, OpenAIService],
+  providers: [ContentService, NotionService, InsightService],
 })
 export class ContentModule {}
