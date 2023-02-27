@@ -6,10 +6,12 @@ import {
   Param,
   Body,
   UseFilters,
+  HttpStatus,
 } from '@nestjs/common';
 import { AccountService } from './account.service';
-import { CreateUserDTO, UserDTO } from '../../types/types';
 import { AllExceptionsFilter } from '../../shared/exceptions';
+import { Response } from '../../types/types';
+import { AccountDTO, CreatAccountDTO } from './account.type';
 
 @Controller('account')
 export class AccountController {
@@ -18,23 +20,27 @@ export class AccountController {
   @UseFilters(AllExceptionsFilter)
   @Get(':id')
   @HttpCode(200)
-  async getAccount(@Param() params): Promise<UserDTO> {
-    try {
-      return this.accountService.getAccount(params.id);
-    } catch (error) {
-      throw error;
-    }
+  async getAccount(@Param() params): Promise<Response<AccountDTO>> {
+    const account = await this.accountService.getAccount(params.id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Account successfully found',
+      data: account,
+    };
   }
 
   @UseFilters(AllExceptionsFilter)
   @Post()
   @HttpCode(201)
-  async createAccount(@Body() user: CreateUserDTO): Promise<UserDTO> {
-    try {
-      return this.accountService.createAccount(user);
-    } catch (error) {
-      throw error;
-    }
+  async createAccount(
+    @Body() user: CreatAccountDTO,
+  ): Promise<Response<AccountDTO>> {
+    const account = await this.accountService.createAccount(user);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Account successfully created',
+      data: account,
+    };
   }
 
   // @UseFilters(AllExceptionsFilter)

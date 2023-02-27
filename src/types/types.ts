@@ -1,15 +1,3 @@
-export class UserDTO {
-  id?: number;
-  name?: string;
-  email?: string;
-  password?: string;
-}
-export class CreateUserDTO {
-  name: string;
-  email?: string;
-  password?: string;
-}
-
 export class UpdateUserDTO {
   id: number;
   name: string;
@@ -61,8 +49,8 @@ export enum ContentType {
   WebPage = 'web-page',
 }
 
-export interface Response {
-  data?: any;
+export interface Response<T> {
+  data?: T;
   message: string;
   statusCode: number;
 }
