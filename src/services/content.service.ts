@@ -135,7 +135,8 @@ export class ContentService {
     return ContentType.WebPage;
   }
 
-  private async storeContent(parsedHTML: any): Promise<void> {
+  async storeContent(contentDetails: any): Promise<void> {
+    //TODO - create a type for contentDetails!
     return;
   }
 }
