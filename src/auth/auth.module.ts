@@ -16,7 +16,7 @@ import { AccountModule } from '../models/accounts/account.module';
     AccountModule,
     PassportModule,
     JwtModule.register({
-      secret: 'SECRET_KEY', //TODO This should really be in your .env file
+      secret: process.env.JWT_SIGNING_SECRET,
       signOptions: { expiresIn: '60s' },
     }),
   ],
