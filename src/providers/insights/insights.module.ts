@@ -8,4 +8,4 @@ import { InsightService } from './insight.service';
   providers: [OpenAIService, InsightService],
   exports: [InsightService, OpenAIService],
 })
-export class InisghtsModule {}
+export class InsightsModule {}

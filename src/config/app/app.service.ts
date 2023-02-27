@@ -5,10 +5,6 @@ import { Account } from '../../models/accounts/account.entity';
 
 @Injectable()
 export class AppService {
-  constructor(
-    @InjectRepository(Account)
-    private accountRepository: Repository<Account>,
-  ) {}
   getHello(): string {
     return 'Ola Mundo!';
   }
