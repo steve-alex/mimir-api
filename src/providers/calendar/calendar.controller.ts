@@ -1,0 +1,25 @@
+import {
+  Controller,
+  Get,
+  HttpStatus,
+  Post,
+  Req,
+  Request,
+} from '@nestjs/common';
+import { Response } from '../../types/types';
+import { CalendarService } from './calendar.service';
+
+@Controller('calendar')
+export class CalendarController {
+  constructor(private readonly calendarService: CalendarService) {}
+
+  @Get()
+  async getEvents(@Req() req: Request): Promise<Response<any>> {
+    const events = this.calendarService.getEvents(req);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Retrieved calanedar events',
+      data: events,
+    };
+  }
+}
