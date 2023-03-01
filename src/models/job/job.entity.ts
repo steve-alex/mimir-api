@@ -6,6 +6,8 @@ import {
   Repository,
   OneToOne,
   JoinColumn,
+  UpdateDateColumn,
+  CreateDateColumn,
 } from 'typeorm';
 import { Account } from '../accounts/account.entity';
 
@@ -33,6 +35,12 @@ export class Job {
   @OneToOne(() => Account, (account) => account.id)
   @JoinColumn()
   account: Account;
+
+  @CreateDateColumn()
+  created_date: Date;
+
+  @UpdateDateColumn()
+  updated_date: Date;
 }
 
 @EntityRepository(Job)

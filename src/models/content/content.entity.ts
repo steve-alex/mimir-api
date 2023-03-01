@@ -5,6 +5,8 @@ import {
   Repository,
   Column,
   ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Medium } from '../../types/types';
 import { Account } from '../accounts/account.entity';
@@ -58,6 +60,12 @@ export class Content {
     default: Medium.WebPage,
   })
   medium: Medium;
+
+  @CreateDateColumn()
+  created_date: Date;
+
+  @UpdateDateColumn()
+  updated_date: Date;
 }
 
 @EntityRepository(Content)

@@ -5,6 +5,8 @@ import {
   EntityRepository,
   Repository,
   ManyToOne,
+  CreateDateColumn,
+  UpdateDateColumn,
 } from 'typeorm';
 import { Account } from '../accounts/account.entity';
 
@@ -21,6 +23,12 @@ export class Availability {
 
   @Column({ type: 'date' })
   end: string;
+
+  @CreateDateColumn()
+  created_date: Date;
+
+  @UpdateDateColumn()
+  updated_date: Date;
 }
 
 @EntityRepository(Availability)
