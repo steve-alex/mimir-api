@@ -7,7 +7,7 @@ export class NotionController {
   constructor(private readonly notionService: NotionService) {}
 
   @Get()
-  async getPages(): Promise<Response> {
+  async getPages(): Promise<Response<any>> {
     const items = await this.notionService.getAllItems();
     return {
       data: items,
@@ -17,7 +17,7 @@ export class NotionController {
   }
 
   @Post()
-  async createPage(@Body() body: NotionPageDetails): Promise<Response> {
+  async createPage(@Body() body: NotionPageDetails): Promise<Response<any>> {
     await this.notionService.createPage(body);
     return {
       statusCode: HttpStatus.CREATED,

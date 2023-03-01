@@ -31,6 +31,14 @@ export class ContentService {
       url: req.body.url,
       ...contentDetails,
     });
+    console.log(
+      '🚀 ~ file: content.service.ts:34 ~ ContentService ~ createContent ~ pageDetails:',
+      pageDetails,
+    );
+    console.log(
+      '🚀 ~ file: content.service.ts:31 ~ ContentService ~ createContent ~ status:',
+      status,
+    );
 
     if (status === 'SUCCESS') {
       await this.storeContent(pageDetails);
@@ -154,8 +162,16 @@ export class ContentService {
         summary: contentDetails.summary,
         time: contentDetails.time,
       };
+      console.log(
+        '🚀 ~ file: content.service.ts:165 ~ ContentService ~ storeContent ~ parsedContentDetails:',
+        parsedContentDetails,
+      );
       return this.contentRepository.insert(parsedContentDetails);
     } catch (err) {
+      console.log(
+        '🚀 ~ file: content.service.ts:171 ~ ContentService ~ storeContent ~ err:',
+        err,
+      );
       throw new Error(err.message);
     }
   }

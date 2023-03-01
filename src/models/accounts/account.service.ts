@@ -14,7 +14,6 @@ export class AccountService {
 
   async getAccount(account: AccountDTO): Promise<AccountDTO> {
     const { id, name, email, password } = account;
-    // TODO move this to different function
     const searchParams: any = {};
     if (id) searchParams.id = id;
     if (name) searchParams.name = name;

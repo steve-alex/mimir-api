@@ -27,14 +27,16 @@ import {
   AccountRepository,
 } from '../../models/accounts/account.entity';
 import { InsightsModule } from '../../providers/insights/insights.module';
+import { CalendarModule } from '../../providers/calendar/calendar.module';
 
 @Module({
   imports: [
-    ContentModule,
     AccountModule,
+    AuthModule,
+    CalendarModule,
+    ContentModule,
     InsightsModule,
     NotionModule,
-    AuthModule,
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
