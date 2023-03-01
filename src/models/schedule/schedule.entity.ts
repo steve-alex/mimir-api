@@ -23,7 +23,7 @@ export class Schedule {
   timesOfDay: string[];
 
   @OneToOne(() => Account, (account) => account.id)
-  @JoinColumn()
+  @JoinColumn({ name: 'accountId' })
   account: Account;
 
   @CreateDateColumn()

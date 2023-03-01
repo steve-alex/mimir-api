@@ -7,6 +7,7 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
 } from 'typeorm';
 import { Account } from '../models/accounts/account.entity';
 
@@ -20,6 +21,7 @@ export class OAuth {
   id: number;
 
   @ManyToOne(() => Account, (account) => account.id)
+  @JoinColumn({ name: 'accountId' })
   account: Account;
 
   @Column({

@@ -7,6 +7,7 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
 } from 'typeorm';
 import { Medium } from '../../types/types';
 import { Account } from '../accounts/account.entity';
@@ -24,6 +25,7 @@ export class Content {
   id: number;
 
   @ManyToOne(() => Account, (account) => account.id)
+  @JoinColumn({ name: 'accountId' })
   account: Account;
 
   @Column()

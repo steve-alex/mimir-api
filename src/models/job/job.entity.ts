@@ -33,7 +33,7 @@ export class Job {
   status: JobStatus;
 
   @OneToOne(() => Account, (account) => account.id)
-  @JoinColumn()
+  @JoinColumn({ name: 'accountId' })
   account: Account;
 
   @CreateDateColumn()

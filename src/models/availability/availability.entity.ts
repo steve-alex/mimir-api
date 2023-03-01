@@ -7,6 +7,7 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
 } from 'typeorm';
 import { Account } from '../accounts/account.entity';
 
@@ -16,6 +17,7 @@ export class Availability {
   id: number;
 
   @ManyToOne(() => Account, (account) => account.id)
+  @JoinColumn({ name: 'accountId' })
   account: Account;
 
   @Column({ type: 'date' })
