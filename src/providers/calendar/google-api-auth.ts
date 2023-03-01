@@ -14,24 +14,6 @@ export async function getToken() {
   const refreshToken = null;
 
   const oauth2Client = makeOAuth2Client();
-  console.log(
-    '🚀 ~ file: google-api-auth.ts:17 ~ getToken ~ oauth2Client:',
-    oauth2Client,
-  );
-  console.log(
-    '🚀 ~ file: google-api-auth.ts:11 ~ makeOAuth2Client ~ process.env.GOOGLE_CALENDAR_CLIENT_ID:',
-    process.env.GOOGLE_CALENDAR_CLIENT_ID,
-  );
-  console.log(
-    '🚀 ~ file: google-api-auth.ts:11 ~ makeOAuth2Client ~ process.env.GOOGLE_CALENDAR_CLIENT_SECRET:',
-    process.env.GOOGLE_CALENDAR_CLIENT_SECRET,
-  );
-  console.log(
-    '🚀 ~ file: google-api-auth.ts:11 ~ makeOAuth2Client ~ process.env.GOOGLE_CALENDAR_REDIRECT_URL:',
-    process.env.GOOGLE_CALENDAR_REDIRECT_URL,
-  );
-
-  console.log('GOOGLE_AUTH_URI =>', process.env.GOOGLE_AUTH_URI);
 
   if (code) {
     return getRefreshToken(code);
@@ -58,4 +40,34 @@ export async function getToken() {
     const token = await oauth2Client.getToken(code);
     return token;
   }
+}
+
+// TODO - strongly type this
+export async function swapAuthorizationCodeForTokens(
+  code: string,
+): Promise<any> {
+  const clientId = process.env.GOOGLE_CALENDAR_CLIENT_ID; // replace with your Google API Console project's client ID
+  const clientSecret = process.env.GOOGLE_CALENDAR_CLIENT_SECRET; // replace with your Google API Console project's client secret
+  const redirectUri = process.env.GOOGLE_CALENDAR_REDIRECT_URL; // replace with your registered redirect URI
+
+  const url = 'https://oauth2.googleapis.com/token'; // Google OAuth2 token endpoint
+
+  // create a POST request to the Google OAuth2 token endpoint
+  const options = {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `client_id=${clientId}&client_secret=${clientSecret}&code=${code}&redirect_uri=${redirectUri}&grant_type=authorization_code`
+  };
+
+  // send the POST request using the Fetch API
+  const response = await fetch(url, options);
+  const data = await response.json();
+
+  const accessToken = data?.access_token;
+  const refreshToken = data?.refresh_token;
+
+  return Object.assign(
+    accessToken && { accessToken },
+    refreshToken && { refreshToken },
+  );
 }

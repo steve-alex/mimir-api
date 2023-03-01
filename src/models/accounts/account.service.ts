@@ -40,17 +40,30 @@ export class AccountService {
     return { name, id: createResult.raw[0].id };
   }
 
-  async storeOAuthCode(code: string, accountId: number): Promise<void> {
+  async storeAuthTokens(tokens: any, accountId: number): Promise<void> {
     const account = await this.accountRepository.findOne({
       where: { id: accountId },
     });
     const oAuth = new OAuth();
-    oAuth.access_token = code;
-    oAuth.refresh_token = ''; // TODO - How does Google handle these?
+    oAuth.refresh_token = tokens.refreshToken;
+    oAuth.access_token = tokens.accessToken;
     oAuth.provider = OAuthProvider.GoogleCalendar;
     oAuth.account = account;
     oAuth.valid = true;
     await this.oAuthRepository.save(oAuth);
+  }
+
+  async getOAuthCode(accountId: number): Promise<string> {
+    const record = await this.oAuthRepository.findOne({
+      where: {
+        account: {
+          id: accountId,
+        },
+        valid: true,
+      },
+    });
+
+    return record.access_token;
   }
 
   // async updateUser(update: UpdateUserDTO): Promise<UserDTO> {
