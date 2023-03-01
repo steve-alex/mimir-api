@@ -8,15 +8,19 @@ import {
 } from '@nestjs/common';
 import { Response } from '../../types/types';
 import { CalendarService } from './calendar.service';
+import { AccountService } from '../../models/accounts/account.service';
 
 @Controller('calendar')
 export class CalendarController {
-  constructor(private readonly calendarService: CalendarService) {}
+  constructor(
+    private readonly calendarService: CalendarService,
+    private readonly accountService: AccountService,
+  ) {}
 
   @Get('oauth')
   async redirect(@Req() req: any) {
     const code = req.query.code;
-    console.log('code =>', code);
+    await this.accountService.storeOAuthCode(code, 1); // TODO - get accountId from request eventually
     return {
       statusCode: HttpStatus.OK,
       message: 'Success',

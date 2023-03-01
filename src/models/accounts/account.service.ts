@@ -4,12 +4,15 @@ import { Account } from './account.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { AccountDTO, CreatAccountDTO } from './account.type';
+import { OAuth, OAuthProvider } from '../../entities/oauth.entity';
 
 @Injectable()
 export class AccountService {
   constructor(
     @InjectRepository(Account)
     private accountRepository: Repository<Account>,
+    @InjectRepository(OAuth)
+    private oAuthRepository: Repository<OAuth>,
   ) {}
 
   async getAccount(account: AccountDTO): Promise<AccountDTO> {
@@ -35,6 +38,19 @@ export class AccountService {
 
     // TODO - According to REST what should I be passing here? Whatever it is, is it necessary?
     return { name, id: createResult.raw[0].id };
+  }
+
+  async storeOAuthCode(code: string, accountId: number): Promise<void> {
+    const account = await this.accountRepository.findOne({
+      where: { id: accountId },
+    });
+    const oAuth = new OAuth();
+    oAuth.access_token = code;
+    oAuth.refresh_token = ''; // TODO - How does Google handle these?
+    oAuth.provider = OAuthProvider.GoogleCalendar;
+    oAuth.account = account;
+    oAuth.valid = true;
+    await this.oAuthRepository.save(oAuth);
   }
 
   // async updateUser(update: UpdateUserDTO): Promise<UserDTO> {

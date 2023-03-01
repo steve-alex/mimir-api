@@ -11,7 +11,7 @@ import {
 } from 'typeorm';
 import { Account } from '../models/accounts/account.entity';
 
-enum OauthProvider {
+export enum OAuthProvider {
   GoogleCalendar = 'google_calendar',
 }
 
@@ -26,10 +26,10 @@ export class OAuth {
 
   @Column({
     type: 'enum',
-    enum: OauthProvider,
-    default: OauthProvider.GoogleCalendar,
+    enum: OAuthProvider,
+    default: OAuthProvider.GoogleCalendar,
   })
-  provider: OauthProvider;
+  provider: OAuthProvider;
 
   @Column()
   valid: boolean;

@@ -9,10 +9,11 @@ import { PassportModule } from '@nestjs/passport';
 import { LocalStrategy } from './local.auth';
 import { JwtStrategy } from './jwt.auth';
 import { AccountModule } from '../models/accounts/account.module';
+import { OAuth } from '../entities/oauth.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Account]),
+    TypeOrmModule.forFeature([Account, OAuth]),
     AccountModule,
     PassportModule,
     JwtModule.register({
