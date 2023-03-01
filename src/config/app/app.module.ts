@@ -28,6 +28,7 @@ import {
 } from '../../models/accounts/account.entity';
 import { InsightsModule } from '../../providers/insights/insights.module';
 import { CalendarModule } from '../../providers/calendar/calendar.module';
+import { OAuth, OAuthRepository } from '../../entities/oauth.entity';
 
 @Module({
   imports: [
@@ -47,7 +48,7 @@ import { CalendarModule } from '../../providers/calendar/calendar.module';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
-        entities: [Account, Content, Availability, Job, Schedule],
+        entities: [Account, Content, Availability, Job, Schedule, OAuth],
         synchronize: true,
         logging: true,
       }),
@@ -62,6 +63,8 @@ import { CalendarModule } from '../../providers/calendar/calendar.module';
       AvailabilityRepository,
       Job,
       JobRepository,
+      OAuth,
+      OAuthRepository,
       Schedule,
       ScheduleRepository,
     ]),

@@ -14,7 +14,7 @@ enum OauthProvider {
   GoogleCalendar = 'google_calendar',
 }
 
-@Entity({ name: 'account' })
+@Entity({ name: 'oauth' })
 export class OAuth {
   @PrimaryGeneratedColumn()
   id: number;
@@ -45,5 +45,5 @@ export class OAuth {
   updated_date: Date;
 }
 
-@EntityRepository(Account)
-export class OauthRepository extends Repository<OAuth> {}
+@EntityRepository(OAuth)
+export class OAuthRepository extends Repository<OAuth> {}
