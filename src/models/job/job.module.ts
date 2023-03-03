@@ -9,4 +9,4 @@ import { JobController } from './job.controller';
   controllers: [JobController],
   providers: [JobService],
 })
-export class ContentModule {}
+export class JobModule {}

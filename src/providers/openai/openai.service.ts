@@ -30,7 +30,7 @@ export class OpenAIService {
   createCompletion = async (
     prompt: string,
     temperature = Temperature.Low,
-    maxTokens = 500,
+    maxTokens = 1500,
   ): Promise<any> => {
     //TODO - make sure that prompt length is validated
     try {
