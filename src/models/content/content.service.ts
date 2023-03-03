@@ -125,21 +125,19 @@ export class ContentService {
       creator: item.snippet.channelTitle,
     };
 
-    function getVideoLength(length: string): string {
+    function getVideoLength(length: string): number {
       // PT13M47S
       // PT1H24M13S
 
-      if (!length.includes('M')) return '< 1 Minute';
+      if (!length.includes('M')) return 0;;
 
       if (!length.includes('H')) {
-        const minutes = length.split('M')[0].split('PT')[1];
-        return `${minutes} Minutes`;
+        return Number(length.split('M')[0].split('PT')[1]);
       }
 
       const minutes = length.split('M')[0].split('H')[1];
       const hours = length.split('H')[0].split('PT')[1];
-
-      return `${hours} Hour${Number(hours) > 1 ? 's' : ''} ${minutes} Minutes`;
+      return Number(hours) * 60 + Number(minutes);
     }
   }
 

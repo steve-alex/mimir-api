@@ -127,7 +127,8 @@ export class InsightService {
     const readingTime = response.data.choices[0].text
       .split('\n')
       .find((t) => t.includes('Reading Time:'))
-      .split('Reading Time:')[1];
+      .split('Reading Time: ')[1]
+      .split(' ')[0];
 
     const categories = response.data.choices[0].text
       .split('\n')
@@ -178,7 +179,8 @@ export class InsightService {
     const readingTime = response.data.choices[0].text
       .split('\n')
       .find((t) => t.includes('Reading Time:'))
-      .split('Reading Time:')[1];
+      .split('Reading Time: ')[1]
+      .split(' ')[0];
 
     const categories = response.data.choices[0].text
       .split('\n')

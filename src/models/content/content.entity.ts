@@ -47,7 +47,7 @@ export class Content {
   url: string;
 
   @Column()
-  time: string;
+  time: number;
 
   @Column({
     type: 'enum',

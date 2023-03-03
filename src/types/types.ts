@@ -29,7 +29,7 @@ export interface WebpageDetails {
 export interface YouTubeVideoDetails {
   title: string;
   creator: string;
-  videoLength: string;
+  videoLength: number;
   categories: string[];
   summary: string;
 }
