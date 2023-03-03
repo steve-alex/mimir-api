@@ -4,7 +4,7 @@ import { Account } from './account.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
 import { AccountDTO, CreatAccountDTO } from './account.type';
-import { OAuth, OAuthProvider } from '../../entities/oauth.entity';
+import { OAuth, OAuthProvider } from '../../providers/calendar/oauth.entity';
 
 @Injectable()
 export class AccountService {

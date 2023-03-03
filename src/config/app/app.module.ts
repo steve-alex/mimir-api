@@ -23,12 +23,12 @@ import { ContentModule } from '../../models/content/content.module';
 import { InsightsModule } from '../../providers/insights/insights.module';
 import { Job, JobRepository } from '../../models/job/job.entity';
 import { NotionModule } from '../../providers/notion/notion.module';
-import { OAuth, OAuthRepository } from '../../entities/oauth.entity';
 import { AuthModule } from '../../auth/auth.module';
 import {
   Schedule,
   ScheduleRepository,
 } from '../../models/schedule/schedule.entity';
+import { OAuth, OAuthRepository } from '../../providers/calendar/oauth.entity';
 
 @Module({
   imports: [
