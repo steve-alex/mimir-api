@@ -3,7 +3,7 @@ import { AccountController } from './account.controler';
 import { AccountService } from './account.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Account } from './account.entity';
-import { OAuth } from '../../entities/oauth.entity';
+import { OAuth } from '../../providers/calendar/oauth.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Account, OAuth])],

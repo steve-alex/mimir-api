@@ -1,34 +1,34 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AccountModule } from '../../models/accounts/account.module';
-import { NotionModule } from '../../providers/notion/notion.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { ContentModule } from '../../models/content/content.module';
 import { AllExceptionsFilter } from '../../shared/exceptions';
-import { AuthModule } from '../../auth/auth.module';
-import {
-  Content,
-  ContentRepository,
-} from '../../models/content/content.entity';
-import {
-  Availability,
-  AvailabilityRepository,
-} from '../../models/availability/availability.entity';
-import { Job, JobRepository } from '../../models/job/job.entity';
-import {
-  Schedule,
-  ScheduleRepository,
-} from '../../models/schedule/schedule.entity';
+import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import {
   Account,
   AccountRepository,
 } from '../../models/accounts/account.entity';
-import { InsightsModule } from '../../providers/insights/insights.module';
+import { AccountModule } from '../../models/accounts/account.module';
+import {
+  Availability,
+  AvailabilityRepository,
+} from '../../models/availability/availability.entity';
 import { CalendarModule } from '../../providers/calendar/calendar.module';
+import {
+  Content,
+  ContentRepository,
+} from '../../models/content/content.entity';
+import { ContentModule } from '../../models/content/content.module';
+import { InsightsModule } from '../../providers/insights/insights.module';
+import { Job, JobRepository } from '../../models/job/job.entity';
+import { NotionModule } from '../../providers/notion/notion.module';
 import { OAuth, OAuthRepository } from '../../entities/oauth.entity';
+import { AuthModule } from '../../auth/auth.module';
+import {
+  Schedule,
+  ScheduleRepository,
+} from '../../models/schedule/schedule.entity';
 
 @Module({
   imports: [
@@ -56,24 +56,15 @@ import { OAuth, OAuthRepository } from '../../entities/oauth.entity';
     }),
     TypeOrmModule.forFeature([
       AccountRepository,
-      Account,
       ContentRepository,
-      Content,
-      Availability,
       AvailabilityRepository,
-      Job,
       JobRepository,
-      OAuth,
       OAuthRepository,
-      Schedule,
       ScheduleRepository,
     ]),
   ],
   controllers: [AppController],
-  providers: [
-    AppService,
-    { provide: AllExceptionsFilter, useClass: AllExceptionsFilter },
-  ],
+  providers: [AppService, AllExceptionsFilter],
 })
 export class AppModule {
   constructor(private dataSource: DataSource) {}
