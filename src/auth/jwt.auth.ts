@@ -2,6 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
+/**
+ * A strategy for passport that uses JWT (JSON Web Token) for authentication
+ * Pass in as decorator @UseGuards(AuthGuard('jwt')) above controller
+ */
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor() {
@@ -13,7 +17,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  //TODO - double check if there is a better approach
   async validate(payload: any) {
     console.log('Validate!');
     return { status: 'OK' };

@@ -9,7 +9,6 @@ export class LocalStrategy extends PassportStrategy(Strategy) {
     super();
   }
 
-  // TODO - make sure that this is working properly
   async validate(
     username: string,
     password: string,
