@@ -37,7 +37,7 @@ export class InsightService {
 
     const authorChunks = results.reduce((acc, prev) => acc + prev?.author, '');
     const readingTimeChunks = results.reduce(
-      (acc, prev) => acc + prev?.readingTime,
+      (acc, prev) => acc + `${prev?.readingTime} Minutes `,
       '',
     );
     const categoriesChunks = results.reduce(
@@ -58,7 +58,7 @@ export class InsightService {
         temp,
       );
 
-    return { author, readingTime, categories, summary };
+    return { title, author, readingTime, categories, summary };
   }
 
   private getWebpageTitleAndContent(html: string): {
@@ -103,10 +103,10 @@ export class InsightService {
   ): Promise<WebpageDetails> {
     //TODO - Update this so that users can update their reading speed!
     const response = await this.openAIService.createCompletion(
-      `1) Does this text reference the main author? Yes? Return the author's name? No? Return ''.
-       2) How long in minutes would this take to read for an extremely fast reader?
-       3) Tag the 5 most relevant and broad categories. Return in the following format {1},{2},{3},{4},{5}
-       4) Write a detailed description of the points from the following text in a style that maximises information retention. RETURN THE ANSWER AS BULLET POINTS.
+      `{1} Does this text reference the main author? Yes? Return the author's name? No? Return ''.
+       {2} How long in minutes would this take to read for an extremely fast reader?
+       {3} Tag the 5 most relevant and broad categories. Return in the following format {1},{2},{3},{4},{5}
+       {4} Write a detailed description of the points from the following text in a style that maximises information retention. RETURN THE ANSWER AS BULLET POINTS.
 
        Return in the following format:
 
@@ -127,8 +127,8 @@ export class InsightService {
     const readingTime = response.data.choices[0].text
       .split('\n')
       .find((t) => t.includes('Reading Time:'))
-      .split('Reading Time: ')[1]
-      .split(' ')[0];
+      .split('Reading Time:')[1]
+      .split(' ')[1];
 
     const categories = response.data.choices[0].text
       .split('\n')
@@ -157,12 +157,12 @@ export class InsightService {
     temp?: number,
   ): Promise<WebpageDetails> {
     const response = await this.openAIService.createCompletion(
-      `1) Select the main author from the following options: ${authorChunks}.
-       2) Sum the total reading time from the following: ${readingTimeChunks}.
-       3) Compile the 5 most relevant and broad categories from the following: ${categoriesChunks}. Return in the following format {1},{2},{3},{4},{5}
-       4) Compile the main bullet points from the following text: ${summaryChunks}. Write in a descriptive format that maximises information retention. RETURN THE ANSWER AS BULLET POINTS.
+      `{1} Select the main author from the following options: ${authorChunks}.
+       {2} Sum the total reading time from the following: ${readingTimeChunks}.
+       {3} Compile the 5 most relevant and broad categories from the following: ${categoriesChunks}. Return in the following format {1},{2},{3},{4},{5}
+       {4} Compile the main bullet points from the following text: ${summaryChunks}. Write in a descriptive format that maximises information retention. RETURN THE ANSWER AS BULLET POINTS.
 
-       Return in the following format:
+       Return the answer to the questions above in the following structure:
 
        Author: {1} \n
        Reading Time: {2} \n
@@ -179,8 +179,8 @@ export class InsightService {
     const readingTime = response.data.choices[0].text
       .split('\n')
       .find((t) => t.includes('Reading Time:'))
-      .split('Reading Time: ')[1]
-      .split(' ')[0];
+      .split('Reading Time:')[1]
+      .split(' ')[1];
 
     const categories = response.data.choices[0].text
       .split('\n')
