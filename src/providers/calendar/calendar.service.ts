@@ -1,14 +1,54 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { getToken } from './google-api-auth';
 import { AccountService } from '../../models/accounts/account.service';
-import * as axios from 'axios';
 
 @Injectable()
 export class CalendarService {
   constructor(@Inject(AccountService) private accountService: AccountService) {}
-  async getEvents(req: any) {
+
+  async scheduleContent(timeSlots: any[], content: any) {
+    return 'success';
+  }
+
+  async getCalendarEvents(start: string, end: string) {
+    return [];
+  }
+
+  async getFreeTimeSlotsInAvailabilities(availabilities: any[]) {
+    return [];
+  }
+
+  async createEvent(req: any) {
     const accessToken = await this.accountService.getOAuthCode(1);
     const calendarId = await this.getCalendarId(accessToken);
+    const start = new Date('2023-03-02T09:00:00-08:00');
+    const end = new Date('2023-03-02T10:00:00-08:00');
+    // set the event details
+    const event = {
+      summary: 'Read stuff',
+      start: {
+        dateTime: start.toISOString(),
+        timeZone: 'Europe/London',
+      },
+      end: {
+        dateTime: end.toISOString(),
+        timeZone: 'Europe/London',
+      },
+    };
+    const headers = new Headers({
+      Authorization: `Bearer ${accessToken}`,
+      Accept: 'application/json',
+    });
+
+    const response = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events`,
+      {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(event),
+      },
+    );
+    console.log('response => ', response);
     // const token = await getToken();
     return '';
   }
@@ -19,38 +59,21 @@ export class CalendarService {
   }
 
   private async getCalendarId(accessToken: string): Promise<string> {
-    const response1 = await fetch(
-      `https://oauth2.googleapis.com/tokeninfo?id_token=${accessToken}`,
-      {
-        method: 'POST',
-      },
-    );
-
-    const data1 = await response1.json();
-
-    if (data1.ok) {
-      // The token is valid, do something with the token information
-      console.log(data1);
-    } else {
-      // The token is invalid or there was an error with the request
-      console.error(data1);
-      console.error(`Error validating token: ${data1}`);
+    try {
+      const url = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
+      const headers = new Headers({
+        Authorization: `Bearer ${accessToken}`,
+        Accept: 'application/json',
+      });
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: headers,
+      });
+      const data = await response.json();
+      const calendarId = data.items.find((item) => item.primary).id;
+      return calendarId;
+    } catch (err) {
+      console.error(err);
     }
-
-    // const url = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
-    // const headers = new Headers({
-    //   Authorization: `Bearer ${accessToken}`,
-    //   Accept: 'application/json',
-    // });
-    // const response = await fetch(url, {
-    //   method: 'GET',
-    //   headers: headers,
-    // });
-    // const calendarId = await response.json();
-    // console.log(
-    //   '🚀 ~ file: calendar.service.ts:43 ~ CalendarService ~ getCalendarId ~ calendarId:',
-    //   calendarId.error,
-    // );
-    return '';
   }
 }
