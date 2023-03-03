@@ -7,11 +7,13 @@ import {
   Body,
   UseFilters,
   HttpStatus,
+  Put,
+  Delete,
 } from '@nestjs/common';
 import { AccountService } from './account.service';
 import { AllExceptionsFilter } from '../../shared/exceptions';
 import { Response } from '../../types/types';
-import { AccountDTO, CreatAccountDTO } from './account.type';
+import { AccountDTO, CreatAccountDTO, UpdateAccountDTO } from './account.type';
 
 @Controller('account')
 export class AccountController {
@@ -43,25 +45,29 @@ export class AccountController {
     };
   }
 
-  // @UseFilters(AllExceptionsFilter)
-  // @Put()
-  // @HttpCode(200) // Update this to 204 if no content event response
-  // async updateUser(@Body() user: UpdateUserDTO): Promise<UserDTO> {
-  //   try {
-  //     return this.accountService.updateUser(user);
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // }
+  @UseFilters(AllExceptionsFilter)
+  @Put()
+  @HttpCode(200)
+  async updateAccount(
+    @Body() user: UpdateAccountDTO,
+  ): Promise<Response<AccountDTO>> {
+    const account = await this.accountService.updateAccount(user);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Account successfully updated',
+      data: account,
+    };
+  }
 
-  // @UseFilters(AllExceptionsFilter)
-  // @Delete(':id')
-  // @HttpCode(200) // Update this to 204 if no content event response
-  // async deleteUser(@Param() params): Promise<void> {
-  //   try {
-  //     await this.accountService.deleteUser(Number(params.id));
-  //   } catch (error) {
-  //     throw error;
-  //   }
-  // }
+  @UseFilters(AllExceptionsFilter)
+  @Delete()
+  @HttpCode(200)
+  async deleteAccount(@Body() user: AccountDTO): Promise<Response<AccountDTO>> {
+    const account = await this.accountService.deleteAccount(user);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Account successfully updated',
+      data: account,
+    };
+  }
 }

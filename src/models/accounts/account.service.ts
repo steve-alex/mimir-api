@@ -3,7 +3,7 @@ import { Repository } from 'typeorm';
 import { Account } from './account.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { AccountDTO, CreatAccountDTO } from './account.type';
+import { AccountDTO, CreatAccountDTO, UpdateAccountDTO } from './account.type';
 import { OAuth, OAuthProvider } from '../../providers/calendar/oauth.entity';
 
 @Injectable()
@@ -66,27 +66,11 @@ export class AccountService {
     return record.access_token;
   }
 
-  // async updateUser(update: UpdateUserDTO): Promise<UserDTO> {
-  //   const user = await this.userRepository.findOneBy({ id: update.id });
+  async updateAccount(userDetails: UpdateAccountDTO): Promise<AccountDTO> {
+    return {};
+  }
 
-  //   if (!user) {
-  //     throw new Error(`Unable to find user | ${update}`); // TODO - format this information nicely
-  //   }
-
-  //   await this.userRepository.update(update.id, {
-  //     name: update.name,
-  //   });
-
-  //   return { ...user, ...update };
-  // }
-
-  // async deleteUser(id: number): Promise<void> {
-  //   const user = await this.userRepository.findOneBy({ id });
-
-  //   if (!user) {
-  //     throw new Error(`Unable to find user | id: ${id}`); // TODO - format this information nicely
-  //   }
-
-  //   await this.userRepository.delete({ id });
-  // }
+  async deleteAccount(userDetails: AccountDTO): Promise<AccountDTO> {
+    return {};
+  }
 }

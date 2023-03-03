@@ -10,3 +10,8 @@ export interface CreatAccountDTO {
   email?: string;
   password?: string;
 }
+
+export interface UpdateAccountDTO {
+  name: string;
+  email?: string;
+}
