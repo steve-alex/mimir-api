@@ -22,23 +22,13 @@ export class ContentService {
   ) {}
 
   async createContent(req: any): Promise<void> {
-    console.log('createPage!');
+    console.log('createContent!');
     const contentDetails = await this.getContentDetails(req.body);
-    // eslint-disable-next-line prettier/prettier
-    console.log('🚀 ~ file: content.service.ts:29 ~ ContentService ~ createPage ~ contentDetails', contentDetails);
 
     const { pageDetails, status } = await this.notionService.createPage({
       url: req.body.url,
       ...contentDetails,
     });
-    console.log(
-      '🚀 ~ file: content.service.ts:34 ~ ContentService ~ createContent ~ pageDetails:',
-      pageDetails,
-    );
-    console.log(
-      '🚀 ~ file: content.service.ts:31 ~ ContentService ~ createContent ~ status:',
-      status,
-    );
 
     if (status === 'SUCCESS') {
       await this.storeContent(pageDetails);
@@ -51,8 +41,6 @@ export class ContentService {
   }): Promise<any> {
     const { url, html } = body;
     const contentType = this.getContentType(url);
-    // eslint-disable-next-line prettier/prettier
-    console.log('🚀 ~ file: content.service.ts:42 ~ ContentService ~ getPageDetails ~ contentType', contentType);
 
     // TODO - At what level of concerns should the temperature
     if (contentType === ContentType.WebPage) {
@@ -129,7 +117,7 @@ export class ContentService {
       // PT13M47S
       // PT1H24M13S
 
-      if (!length.includes('M')) return 0;;
+      if (!length.includes('M')) return 0;
 
       if (!length.includes('H')) {
         return Number(length.split('M')[0].split('PT')[1]);
@@ -160,16 +148,8 @@ export class ContentService {
         summary: contentDetails.summary,
         time: contentDetails.time,
       };
-      console.log(
-        '🚀 ~ file: content.service.ts:165 ~ ContentService ~ storeContent ~ parsedContentDetails:',
-        parsedContentDetails,
-      );
       return this.contentRepository.insert(parsedContentDetails);
     } catch (err) {
-      console.log(
-        '🚀 ~ file: content.service.ts:171 ~ ContentService ~ storeContent ~ err:',
-        err,
-      );
       throw new Error(err.message);
     }
   }
