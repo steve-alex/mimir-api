@@ -30,11 +30,13 @@ import {
 } from '../../models/schedule/schedule.entity';
 import { OAuth, OAuthRepository } from '../../providers/calendar/oauth.entity';
 import { JobModule } from '../../models/job/job.module';
+import { AvailabilityModule } from '../../models/availability/availability.module';
 
 @Module({
   imports: [
     AccountModule,
     AuthModule,
+    AvailabilityModule,
     CalendarModule,
     ContentModule,
     InsightsModule,

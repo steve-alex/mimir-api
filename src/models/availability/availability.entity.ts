@@ -20,11 +20,17 @@ export class Availability {
   @JoinColumn({ name: 'accountId' })
   account: Account;
 
-  @Column({ type: 'date' })
-  start: string;
+  @Column({ type: 'varchar' })
+  day_of_week: string; // Thursday, Friday, etc.
 
-  @Column({ type: 'date' })
-  end: string;
+  @Column({ type: 'time' })
+  start_time: string; // 05:00:00, 06:00:00, etc.
+
+  @Column({ type: 'time' })
+  end_time: string; // 06:00:00, 07:00:00, etc.
+
+  @Column()
+  deleted: boolean;
 
   @CreateDateColumn()
   created_date: Date;
