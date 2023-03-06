@@ -21,6 +21,17 @@ export class ContentService {
     @InjectRepository(Content) private contentRepository: Repository<Content>,
   ) {}
 
+  async getContent(details: any): Promise<Content[]> {
+    return this.contentRepository.find({
+      where: {
+        account: {
+          id: details.accountId,
+        },
+        status: details.inbox,
+      },
+    });
+  }
+
   async createContent(req: any): Promise<void> {
     console.log('createContent!');
     const contentDetails = await this.getContentDetails(req.body);
@@ -33,6 +44,13 @@ export class ContentService {
     if (status === 'SUCCESS') {
       await this.storeContent(pageDetails);
     }
+  }
+
+  async updateContent(body: any): Promise<void> {
+    await this.contentRepository.save({
+      id: body.id,
+      status: body.status,
+    });
   }
 
   private async getContentDetails(body: {

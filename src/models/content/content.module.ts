@@ -12,5 +12,6 @@ import { Content } from './content.entity';
   imports: [NotionModule, InsightsModule, TypeOrmModule.forFeature([Content])],
   controllers: [ContentController],
   providers: [ContentService, NotionService, InsightService],
+  exports: [ContentService],
 })
 export class ContentModule {}
