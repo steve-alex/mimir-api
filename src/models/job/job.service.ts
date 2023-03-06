@@ -24,13 +24,9 @@ export class JobService {
       accountId,
       status: Status.Inbox,
     });
-    console.log(
-      '🚀 ~ file: job.service.ts:27 ~ JobService ~ scheduleContentInInbox ~ content:',
-      content,
-    );
 
-    // const availabilities =
-    //   await this.availabilityService.getParsedAvailabilities(accountId);
+    const availabilities =
+      await this.availabilityService.getUpcomingAvailabilities(accountId);
 
     // const events = await this.calendarService.getScheduledEvents(
     //   availabilities,
