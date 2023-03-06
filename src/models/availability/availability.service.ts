@@ -46,14 +46,26 @@ export class AvailabilityService {
   }
 
   /**
-   * Get the upcoming 2 weeks worth of availabilities, return
+   * Get the upcoming 2 weeks worth of availabilities
    */
   async getUpcomingAvailabilities(
     accountId: number,
   ): Promise<AvailabilityDTO[]> {
-    const availabilities = await this.get({ accountId, deleted: false });
+    const rawAvailabilities = await this.get({ accountId, deleted: false });
 
-    const sortedAvailabilities = availabilities.sort((a, b) => {
+    const sortedRawAvailabilities =
+      this.sortAvailabilitiesByDate(rawAvailabilities);
+
+    return this.getParsedUpcomingAvailabilities(sortedRawAvailabilities);
+  }
+
+  /**
+   * Sorts the availabilities by ascending order of time
+   */
+  private sortAvailabilitiesByDate(
+    availabilities: Availability[],
+  ): Availability[] {
+    return availabilities.sort((a, b) => {
       // sort in ascending order of days
       if (a.day_of_week !== b.day_of_week) {
         return Number(a.day_of_week) - Number(b.day_of_week);
@@ -61,15 +73,21 @@ export class AvailabilityService {
       // if the days are the same, sort in ascending order of time
       return a.start_time.localeCompare(b.start_time);
     });
+  }
 
+  /**
+   * Takes the availabilities and returns the upcoming 2 weeks worth of parsed availabilities
+   */
+  private getParsedUpcomingAvailabilities(
+    availabilities: Availability[],
+  ): AvailabilityDTO[] {
     const parsedAvailabilities = [];
-
     const currentDate = new Date();
 
     for (let i = 0; i < 14; i++) {
       const currentDayOfWeek = currentDate.getDay();
 
-      for (const availability of sortedAvailabilities) {
+      for (const availability of availabilities) {
         const { day_of_week, start_time, end_time } = availability;
 
         if (day_of_week === currentDayOfWeek.toString()) {
@@ -89,12 +107,15 @@ export class AvailabilityService {
     return parsedAvailabilities;
   }
 
-  private parseDateTime(time: string, dayOfWeek: number): any {
+  /**
+   * Takes a time, and and a day off set and creates a new DateTime with that time day
+   */
+  private parseDateTime(time: string, offset: number): Date {
     const dateTime = new Date();
     dateTime.setHours(parseInt(time.slice(0, 2)));
     dateTime.setMinutes(parseInt(time.slice(3, 5)));
     dateTime.setSeconds(parseInt(time.slice(6, 8)));
-    dateTime.setDate(dateTime.getDate() + dayOfWeek);
+    dateTime.setDate(dateTime.getDate() + offset);
     return dateTime;
   }
 }
