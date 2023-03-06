@@ -24,47 +24,51 @@ export class JobService {
       accountId,
       status: Status.Inbox,
     });
-
-    const availabilities =
-      await this.availabilityService.getParsedAvailabilities(accountId);
-
-    const events = await this.calendarService.getScheduledEvents(
-      availabilities,
+    console.log(
+      '🚀 ~ file: job.service.ts:27 ~ JobService ~ scheduleContentInInbox ~ content:',
+      content,
     );
 
-    const schedule = this.removeTimeSlots(availabilities, events);
-    const mappedSchedule = this.addTimeToSlots(schedule);
-    for (const c of content) {
-      const time = c.time;
+    // const availabilities =
+    //   await this.availabilityService.getParsedAvailabilities(accountId);
 
-      for (const s of mappedSchedule) {
-        if (s.time > time) {
-          try {
-            await Promise.all([
-              this.calendarService.createEvent({
-                title: c.title,
-                start: s.start,
-                end: new Date(s.start.getTime() + time * 60000),
-              }),
-              // this.contentService.updateContent({
-              //   id: c.id,
-              //   status: Status.Saved,
-              // }),
-              // this.notionService.updatePage({})
-            ]);
+    // const events = await this.calendarService.getScheduledEvents(
+    //   availabilities,
+    // );
 
-            this.updateSchedule(s, time);
-            break;
-          } catch (err) {
-            console.log('err =>', err);
-            console.error(
-              `Unable to schedule event - ${c} in availability - ${s}`,
-            );
-            continue;
-          }
-        }
-      }
-    }
+    // const schedule = this.removeTimeSlots(availabilities, events);
+    // const mappedSchedule = this.addTimeToSlots(schedule);
+    // for (const c of content) {
+    //   const time = c.time;
+
+    //   for (const s of mappedSchedule) {
+    //     if (s.time > time) {
+    //       try {
+    //         await Promise.all([
+    //           this.calendarService.createEvent({
+    //             title: c.title,
+    //             start: s.start,
+    //             end: new Date(s.start.getTime() + time * 60000),
+    //           }),
+    //           // this.contentService.updateContent({
+    //           //   id: c.id,
+    //           //   status: Status.Saved,
+    //           // }),
+    //           // this.notionService.updatePage({})
+    //         ]);
+
+    //         this.updateSchedule(s, time);
+    //         break;
+    //       } catch (err) {
+    //         console.log('err =>', err);
+    //         console.error(
+    //           `Unable to schedule event - ${c} in availability - ${s}`,
+    //         );
+    //         continue;
+    //       }
+    //     }
+    //   }
+    // }
   }
 
   removeTimeSlots(availabilities, timeSlots) {

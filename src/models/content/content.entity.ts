@@ -9,8 +9,8 @@ import {
   UpdateDateColumn,
   JoinColumn,
 } from 'typeorm';
-import { Medium } from '../../types/types';
 import { Account } from '../accounts/account.entity';
+import { Medium } from './content.type';
 
 export enum Status {
   Inbox = 'inbox',

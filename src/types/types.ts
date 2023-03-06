@@ -1,3 +1,5 @@
+import { Medium } from '../models/content/content.type';
+
 export class UpdateUserDTO {
   id: number;
   name: string;
@@ -11,11 +13,6 @@ export interface NotionPageDetails {
   categories?: string[];
   summary?: string;
   time?: string;
-}
-
-export enum Medium {
-  YouTube = 'youtube',
-  WebPage = 'webpage',
 }
 
 export interface WebpageDetails {

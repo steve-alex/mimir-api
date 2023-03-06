@@ -3,7 +3,6 @@ import { NotionService } from '../../providers/notion/notion.service';
 import { InsightService } from '../../providers/insights/insight.service';
 import {
   ContentType,
-  Medium,
   Temperature,
   YouTubeVideoDetails,
   YouTubeVideoMetadata,
@@ -12,6 +11,7 @@ import YoutubeTranscript from 'youtube-transcript';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Content } from './content.entity';
 import { Repository } from 'typeorm';
+import { ContentDTO, Medium } from './content.type';
 
 @Injectable()
 export class ContentService {
@@ -21,15 +21,16 @@ export class ContentService {
     @InjectRepository(Content) private contentRepository: Repository<Content>,
   ) {}
 
-  async getContent(details: any): Promise<Content[]> {
-    return this.contentRepository.find({
-      where: {
-        account: {
-          id: details.accountId,
-        },
-        status: details.inbox,
-      },
-    });
+  async getContent(contentDetails: ContentDTO): Promise<Content[]> {
+    const where: any = {};
+
+    if (contentDetails?.accountId) {
+      where.account = {};
+      where.account.id = contentDetails.accountId;
+    }
+    if (contentDetails?.status) where.title = contentDetails.status;
+
+    return this.contentRepository.find({ where });
   }
 
   async createContent(req: any): Promise<void> {
