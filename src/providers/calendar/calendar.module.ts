@@ -7,6 +7,6 @@ import { AccountModule } from '../../models/accounts/account.module';
   imports: [AccountModule],
   controllers: [CalendarController],
   providers: [CalendarService],
-  exports: [],
+  exports: [CalendarService],
 })
 export class CalendarModule {}
