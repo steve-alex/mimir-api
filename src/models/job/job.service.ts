@@ -1,12 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { AvailabilityService } from '../availability/availability.service';
 import { CalendarService } from '../../providers/calendar/calendar.service';
-import { NotionService } from '../../providers/notion/notion.service';
 import { ContentService } from '../content/content.service';
 import { Status } from '../content/content.entity';
-import { start } from 'repl';
-import { updateDatabase } from '@notionhq/client/build/src/api-endpoints';
-import { scheduled } from 'rxjs';
 
 @Injectable()
 export class JobService {
@@ -19,7 +15,11 @@ export class JobService {
     private calendarService: CalendarService,
   ) {}
 
-  async scheduleContent(accountId: number): Promise<void> {
+  /**
+   * Creates a job that schedules all the content in the inbox for a specific accountId and schedules them at the next available date
+   * The job creates Google Calendar events, updates the card in Notion to "scheduled" and also updated the content record in the DB
+   */
+  async scheduleContentInInbox(accountId: number): Promise<void> {
     const content = await this.contentService.getContent({
       accountId,
       status: Status.Inbox,
