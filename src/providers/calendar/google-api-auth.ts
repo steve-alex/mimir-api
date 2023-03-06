@@ -56,12 +56,13 @@ export async function swapAuthorizationCodeForTokens(
   const options = {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `client_id=${clientId}&client_secret=${clientSecret}&code=${code}&redirect_uri=${redirectUri}&grant_type=authorization_code`
+    body: `client_id=${clientId}&client_secret=${clientSecret}&code=${code}&redirect_uri=${redirectUri}&grant_type=authorization_code`,
   };
 
   // send the POST request using the Fetch API
   const response = await fetch(url, options);
   const data = await response.json();
+  console.log('🚀 ~ file: google-api-auth.ts:65 ~ data:', data);
 
   const accessToken = data?.access_token;
   const refreshToken = data?.refresh_token;

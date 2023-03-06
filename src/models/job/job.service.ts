@@ -2,54 +2,153 @@ import { Inject, Injectable } from '@nestjs/common';
 import { AvailabilityService } from '../availability/availability.service';
 import { CalendarService } from '../../providers/calendar/calendar.service';
 import { NotionService } from '../../providers/notion/notion.service';
+import { ContentService } from '../content/content.service';
+import { Status } from '../content/content.entity';
+import { start } from 'repl';
+import { updateDatabase } from '@notionhq/client/build/src/api-endpoints';
+import { scheduled } from 'rxjs';
 
 @Injectable()
 export class JobService {
-  // async scheduleContent(content: any[]): Promise<void> {
-  //   // 1. Get length of content
-  //   const contentLength = this.getContentLength(content);
+  constructor(
+    @Inject(ContentService)
+    private contentService: ContentService,
+    @Inject(AvailabilityService)
+    private availabilityService: AvailabilityService,
+    @Inject(CalendarService)
+    private calendarService: CalendarService,
+  ) {}
 
-  //   // 2. Get all the availabilities - this is a weekly thing
-  //   // The upcoming 2 weeks worth of availabilities
-  //   const availabilities =
-  //     await this.availabilityService.getUpcomingAvailabilities(
-  //       1,
-  //       contentLength,
-  //     );
+  async scheduleContent(accountId: number): Promise<void> {
+    const content = await this.contentService.getContent({
+      accountId,
+      status: Status.Inbox,
+    });
 
-  //   // The upcoming 2 weeks worth of time slots to avoid any conflicts.
-  //   const timeSlots =
-  //     await this.calendarService.getFreeTimeSlotsInAvailabilities(
-  //       availabilities,
-  //     );
+    const availabilities =
+      await this.availabilityService.getParsedAvailabilities(accountId);
 
-  //   const contentToSchedule = [...content].sort((a, b) => {
-  //     if (a.length > b) return 1;
-  //     else return -1;
-  //   });
+    const events = await this.calendarService.getScheduledEvents(
+      availabilities,
+    );
 
-  //   for (const content of contentToSchedule) {
-  //     const [status, { start, end }] =
-  //       await this.calendarService.scheduleContent(timeSlots, content);
+    const schedule = this.removeTimeSlots(availabilities, events);
+    const mappedSchedule = this.addTimeToSlots(schedule);
+    for (const c of content) {
+      const time = c.time;
 
-  //     if (status === 'success') {
-  //       await this.notionService.updatePage(content.id, {
-  //         status: Status.Saved,
-  //       });
+      for (const s of mappedSchedule) {
+        if (s.time > time) {
+          try {
+            await Promise.all([
+              this.calendarService.createEvent({
+                title: c.title,
+                start: s.start,
+                end: new Date(s.start.getTime() + time * 60000),
+              }),
+              // this.contentService.updateContent({
+              //   id: c.id,
+              //   status: Status.Saved,
+              // }),
+              // this.notionService.updatePage({})
+            ]);
 
-  //       this.updateTimeSlots(timeSlots, { start, end });
-  //     }
+            this.updateSchedule(s, time);
+            break;
+          } catch (err) {
+            console.log('err =>', err);
+            console.error(
+              `Unable to schedule event - ${c} in availability - ${s}`,
+            );
+            continue;
+          }
+        }
+      }
+    }
+  }
 
-  //     if (status !== 'success') {
-  //       console.error(`Unable to schedule content - ${content}`);
-  //     }
-  //   }
-  // }
+  removeTimeSlots(availabilities, timeSlots) {
+    // Create a new array to store the updated availabilities
+    const newAvailabilities = [];
 
-  // /**
-  //  * Take an array of content and sum the total length of the content
-  //  */
-  // private getContentLength(content: any[]): number {
-  //   return content.length;
-  // }
+    // Loop through each availability
+    for (const availability of availabilities) {
+      // Create a flag to track whether the availability has been modified
+      let availabilityModified = false;
+      // Loop through each timeslot
+      for (const timeSlot of timeSlots) {
+        // Check if the timeslot overlaps with the availability
+        const timeSlotStart = new Date(timeSlot.start.dateTime);
+        const timeSlotEnd = new Date(timeSlot.end.dateTime);
+        const availabilityStart = new Date(availability.start);
+        const availabilityEnd = new Date(availability.end);
+        if (
+          timeSlotStart < availabilityEnd &&
+          timeSlotEnd > availabilityStart
+        ) {
+          // Remove the timeslot from the availability
+          if (
+            timeSlotStart <= availabilityStart &&
+            timeSlotEnd >= availabilityEnd
+          ) {
+            // The timeslot completely contains the availability, so remove the availability
+            availabilityModified = true;
+          } else if (timeSlotStart <= availabilityStart) {
+            // The timeslot overlaps with the beginning of the availability, so adjust the start time
+            newAvailabilities.push({
+              start: timeSlotEnd,
+              end: availabilityEnd,
+            });
+            availabilityModified = true;
+          } else if (timeSlotEnd >= availabilityEnd) {
+            // The timeslot overlaps with the end of the availability, so adjust the end time
+            newAvailabilities.push({
+              start: availabilityStart,
+              end: timeSlotStart,
+            });
+            availabilityModified = true;
+          } else {
+            // The timeslot is in the middle of the availability, so split it into two availabilities
+            const newAvailability1 = {
+              start: availabilityStart,
+              end: timeSlotStart,
+            };
+            const newAvailability2 = {
+              start: timeSlotEnd,
+              end: availabilityEnd,
+            };
+            newAvailabilities.push(newAvailability1, newAvailability2);
+            availabilityModified = true;
+          }
+        }
+      }
+
+      // Add the availability to the new array if it hasn't been modified
+      if (!availabilityModified) {
+        newAvailabilities.push(availability);
+      }
+    }
+
+    return newAvailabilities;
+  }
+
+  updateSchedule(schedule, time) {
+    const updatedTime = new Date(schedule.start.getTime() + time * 60000);
+    schedule.start = updatedTime;
+    schedule.time = schedule.time - time;
+  }
+
+  addTimeToSlots(schedule: any[]) {
+    return schedule.map((s) => {
+      return {
+        ...s,
+        time: getMinuteDifference(s.end, s.start),
+      };
+    });
+
+    function getMinuteDifference(end: Date, start: Date): number {
+      const timeDiff = Math.abs(end.getTime() - start.getTime());
+      return Math.floor(timeDiff / 60000);
+    }
+  }
 }
