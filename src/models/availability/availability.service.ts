@@ -15,6 +15,10 @@ export class AvailabilityService {
   ) {}
 
   async get(details: IAvailability): Promise<Availability[]> {
+    console.log(
+      '🚀 ~ file: availability.service.ts:18 ~ AvailabilityService ~ get ~ details:',
+      details,
+    );
     const where: any = {};
 
     if (details?.accountId) {
@@ -22,7 +26,7 @@ export class AvailabilityService {
       where.account.id = details.accountId;
     }
     if (details?.deleted === false || details?.deleted === true)
-      where.title = details.deleted;
+      where.deleted = details.deleted;
 
     return this.availabilityRepository.find({ where });
   }
@@ -52,6 +56,10 @@ export class AvailabilityService {
     accountId: number,
   ): Promise<AvailabilityDTO[]> {
     const rawAvailabilities = await this.get({ accountId, deleted: false });
+    console.log(
+      '🚀 ~ file: availability.service.ts:55 ~ AvailabilityService ~ rawAvailabilities:',
+      rawAvailabilities,
+    );
 
     const sortedRawAvailabilities =
       this.sortAvailabilitiesByDate(rawAvailabilities);

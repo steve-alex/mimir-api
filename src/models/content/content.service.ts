@@ -28,7 +28,7 @@ export class ContentService {
       where.account = {};
       where.account.id = details.accountId;
     }
-    if (details?.status) where.title = details.status;
+    if (details?.status) where.status = details.status;
 
     return this.contentRepository.find({ where });
   }
