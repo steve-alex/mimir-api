@@ -3,6 +3,7 @@ import { Availability } from './availability.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Account } from '../accounts/account.entity';
+import { AvailabilityDTO, IAvailability } from './availability.type';
 
 @Injectable()
 export class AvailabilityService {
@@ -13,15 +14,17 @@ export class AvailabilityService {
     private accountRepository: Repository<Account>,
   ) {}
 
-  async get(accountId: number): Promise<any> {
-    return this.availabilityRepository.find({
-      where: {
-        account: {
-          id: accountId,
-        },
-        deleted: false,
-      },
-    });
+  async get(details: IAvailability): Promise<Availability[]> {
+    const where: any = {};
+
+    if (details?.accountId) {
+      where.account = {};
+      where.account.id = details.accountId;
+    }
+    if (details?.deleted === false || details?.deleted === true)
+      where.title = details.deleted;
+
+    return this.availabilityRepository.find({ where });
   }
 
   async create(details: any) {
@@ -42,13 +45,18 @@ export class AvailabilityService {
     await this.availabilityRepository.insert(parsedDetails);
   }
 
-  async getParsedAvailabilities(accountId: number): Promise<any> {
-    const availabilities = await this.get(accountId);
+  /**
+   * Get the upcoming 2 weeks worth of availabilities, return
+   */
+  async getUpcomingAvailabilities(
+    accountId: number,
+  ): Promise<AvailabilityDTO[]> {
+    const availabilities = await this.get({ accountId, deleted: false });
 
     const sortedAvailabilities = availabilities.sort((a, b) => {
       // sort in ascending order of days
       if (a.day_of_week !== b.day_of_week) {
-        return a.day_of_week - b.day_of_week;
+        return Number(a.day_of_week) - Number(b.day_of_week);
       }
       // if the days are the same, sort in ascending order of time
       return a.start_time.localeCompare(b.start_time);
