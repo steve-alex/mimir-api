@@ -7,14 +7,6 @@ import { response } from 'express';
 export class CalendarService {
   constructor(@Inject(AccountService) private accountService: AccountService) {}
 
-  async scheduleContent(timeSlots: any[], content: any) {
-    return 'success';
-  }
-
-  async getCalendarEvents(start: string, end: string) {
-    return [];
-  }
-
   async getScheduledEvents(availabilities: any[]) {
     const accessToken = await this.accountService.getOAuthCode(1);
     const calendarId = await this.getCalendarId(accessToken);
@@ -109,21 +101,26 @@ export class CalendarService {
   }
 
   private async getCalendarId(accessToken: string): Promise<string> {
-    try {
-      const url = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
-      const headers = new Headers({
-        Authorization: `Bearer ${accessToken}`,
-        Accept: 'application/json',
-      });
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: headers,
-      });
-      const data = await response.json();
-      const calendarId = data.items.find((item) => item.primary).id;
-      return calendarId;
-    } catch (err) {
-      console.error(err);
-    }
+    const url = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
+    const headers = new Headers({
+      Authorization: `Bearer ${accessToken}`,
+      Accept: 'application/json',
+    });
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: headers,
+    });
+
+    if (!response.ok)
+      throw new Error(`Failed to fetch calendar list: ${response.statusText}`);
+
+    const data = await response.json();
+    const primaryCalendar = data.items.find((item) => item.primary).id;
+
+    if (!primaryCalendar)
+      throw new Error(`Failed to fetch calendar list: ${response.statusText}`);
+
+    return primaryCalendar.id;
   }
 }
