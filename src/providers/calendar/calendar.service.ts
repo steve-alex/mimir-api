@@ -1,13 +1,15 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { getToken } from './google-api-auth';
 import { AccountService } from '../../models/accounts/account.service';
-import { response } from 'express';
+import { AvailabilityDTO } from '../../models/availability/availability.type';
 
 @Injectable()
 export class CalendarService {
   constructor(@Inject(AccountService) private accountService: AccountService) {}
 
-  async getScheduledEvents(availabilities: any[]) {
+  async getScheduledEvents(
+    availabilities: AvailabilityDTO[],
+  ): Promise<AvailabilityDTO[]> {
     const accessToken = await this.accountService.getOAuthCode(1);
     const calendarId = await this.getCalendarId(accessToken);
 
@@ -16,43 +18,36 @@ export class CalendarService {
         const headers = new Headers({
           Authorization: `Bearer ${accessToken}`,
           Accept: 'application/json',
+          'Content-Type': 'application/json',
         });
 
         const timeMin = new Date(a.start).toISOString();
         const timeMax = new Date(a.end).toISOString();
         const url = `https://www.googleapis.com/calendar/v3/calendars/${calendarId}/events?timeMin=${timeMin}&timeMax=${timeMax}`;
 
-        try {
-          const response = await fetch(url, {
-            headers,
-          });
+        const response = await fetch(url, {
+          headers,
+        });
 
-          return response;
-        } catch (err) {
-          console.error(err);
+        if (response.ok) return response.json();
+        else {
+          console.error(
+            `Unable to find events for calendar ${calendarId} between ${timeMin} and ${timeMax}`,
+          );
+          return null;
         }
-
-        return response;
       }),
     );
 
-    const data = await Promise.all(
-      responses.map(async (response) => {
-        const data = await response.json();
-        return data;
-      }),
-    );
+    const data = await Promise.all(responses);
 
     const parsedData = data
-      .map((d) => {
-        if (d.items.length) {
-          return d.items;
-        }
-
-        return false;
+      .filter((r) => r !== null)
+      .flatMap((d) => {
+        if (d?.items.length) return d.items;
+        else return false;
       })
       .filter((d) => d)
-      .flat()
       .map((d) => {
         return {
           start: d.start,
@@ -116,7 +111,7 @@ export class CalendarService {
       throw new Error(`Failed to fetch calendar list: ${response.statusText}`);
 
     const data = await response.json();
-    const primaryCalendar = data.items.find((item) => item.primary).id;
+    const primaryCalendar = data.items.find((item) => item.primary);
 
     if (!primaryCalendar)
       throw new Error(`Failed to fetch calendar list: ${response.statusText}`);
