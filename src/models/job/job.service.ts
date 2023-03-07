@@ -3,6 +3,8 @@ import { AvailabilityService } from '../availability/availability.service';
 import { CalendarService } from '../../providers/calendar/calendar.service';
 import { ContentService } from '../content/content.service';
 import { Status } from '../content/content.entity';
+import { Availability } from '../availability/availability.entity';
+import { AvailabilityDTO } from '../availability/availability.type';
 
 @Injectable()
 export class JobService {
@@ -16,28 +18,29 @@ export class JobService {
   ) {}
 
   /**
-   * Creates a job that schedules all the content in the inbox for a specific accountId and schedules them at the next available date
+   * Creates a job that schedules all the content in the inbox for a specific accountId and at the next available time
    * The job creates Google Calendar events, updates the card in Notion to "scheduled" and also updated the content record in the DB
    */
-  async scheduleContentInInbox(accountId: number): Promise<void> {
+  async scheduleContent(accountId: number): Promise<void> {
     const content = await this.contentService.getContent({
       accountId,
       status: Status.Inbox,
     });
+
     if (!content.length) return;
 
     const availabilities =
       await this.availabilityService.getUpcomingAvailabilities(accountId);
-    console.log(
-      '🚀 ~ file: job.service.ts:29 ~ JobService ~ scheduleContentInInbox ~ availabilities:',
+
+    const events = await this.calendarService.getScheduledEvents(
       availabilities,
     );
 
-    // const events = await this.calendarService.getScheduledEvents(
-    //   availabilities,
-    // );
+    const updatedAvailabilities = this.removeEventsFromAvailabilities(
+      availabilities,
+      events,
+    );
 
-    // const schedule = this.removeTimeSlots(availabilities, events);
     // const mappedSchedule = this.addTimeToSlots(schedule);
     // for (const c of content) {
     //   const time = c.time;
@@ -72,54 +75,52 @@ export class JobService {
     // }
   }
 
-  removeTimeSlots(availabilities, timeSlots) {
-    // Create a new array to store the updated availabilities
+  /**
+   * Takes an array of availabilities and then modifies it by removing the overlapping events;
+   */
+  private removeEventsFromAvailabilities(
+    availabilities: AvailabilityDTO[],
+    events: AvailabilityDTO[],
+  ): AvailabilityDTO[] {
     const newAvailabilities = [];
 
-    // Loop through each availability
     for (const availability of availabilities) {
-      // Create a flag to track whether the availability has been modified
       let availabilityModified = false;
-      // Loop through each timeslot
-      for (const timeSlot of timeSlots) {
+
+      for (const event of events) {
         // Check if the timeslot overlaps with the availability
-        const timeSlotStart = new Date(timeSlot.start.dateTime);
-        const timeSlotEnd = new Date(timeSlot.end.dateTime);
+        const eventStart = new Date(event.start);
+        const eventEnd = new Date(event.end);
         const availabilityStart = new Date(availability.start);
         const availabilityEnd = new Date(availability.end);
-        if (
-          timeSlotStart < availabilityEnd &&
-          timeSlotEnd > availabilityStart
-        ) {
-          // Remove the timeslot from the availability
-          if (
-            timeSlotStart <= availabilityStart &&
-            timeSlotEnd >= availabilityEnd
-          ) {
+
+        if (eventStart < availabilityEnd && eventEnd > availabilityStart) {
+          // Check if event overlaps the availability in any way
+          if (eventStart <= availabilityStart && eventEnd >= availabilityEnd) {
             // The timeslot completely contains the availability, so remove the availability
             availabilityModified = true;
-          } else if (timeSlotStart <= availabilityStart) {
+          } else if (eventStart <= availabilityStart) {
             // The timeslot overlaps with the beginning of the availability, so adjust the start time
             newAvailabilities.push({
-              start: timeSlotEnd,
+              start: eventStart,
               end: availabilityEnd,
             });
             availabilityModified = true;
-          } else if (timeSlotEnd >= availabilityEnd) {
+          } else if (eventEnd >= availabilityEnd) {
             // The timeslot overlaps with the end of the availability, so adjust the end time
             newAvailabilities.push({
               start: availabilityStart,
-              end: timeSlotStart,
+              end: eventEnd,
             });
             availabilityModified = true;
           } else {
             // The timeslot is in the middle of the availability, so split it into two availabilities
             const newAvailability1 = {
               start: availabilityStart,
-              end: timeSlotStart,
+              end: eventStart,
             };
             const newAvailability2 = {
-              start: timeSlotEnd,
+              start: eventEnd,
               end: availabilityEnd,
             };
             newAvailabilities.push(newAvailability1, newAvailability2);

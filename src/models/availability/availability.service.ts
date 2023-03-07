@@ -56,10 +56,6 @@ export class AvailabilityService {
     accountId: number,
   ): Promise<AvailabilityDTO[]> {
     const rawAvailabilities = await this.get({ accountId, deleted: false });
-    console.log(
-      '🚀 ~ file: availability.service.ts:55 ~ AvailabilityService ~ rawAvailabilities:',
-      rawAvailabilities,
-    );
 
     const sortedRawAvailabilities =
       this.sortAvailabilitiesByDate(rawAvailabilities);

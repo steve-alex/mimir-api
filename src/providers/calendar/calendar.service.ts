@@ -50,8 +50,8 @@ export class CalendarService {
       .filter((d) => d)
       .map((d) => {
         return {
-          start: d.start,
-          end: d.end,
+          start: d.start.dateTime,
+          end: d.end.dateTime,
         };
       });
 
