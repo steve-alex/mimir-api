@@ -89,62 +89,139 @@ export class JobService {
     availabilities: TimeSlot[],
     events: TimeSlot[],
   ): TimeSlot[] {
-    const newAvailabilities = [];
-
     if (!events.length) return availabilities;
 
-    for (const availability of availabilities) {
-      let availabilityModified = false;
+    const overlappingEventArray = this.getOverlappingEvents(
+      availabilities,
+      events,
+    );
+    const updatedAvailabilities = [...availabilities];
 
+    for (const event of overlappingEventArray) {
+      const eventStart = new Date(event.start);
+      const eventEnd = new Date(event.end);
+
+      const overlappingAvailability = availabilities.filter((a) => {
+        const { start, end } = a;
+        const availabilityStart = new Date(start);
+        const availabilityEnd = new Date(end);
+
+        if (eventStart < availabilityEnd && eventEnd > availabilityStart) {
+          return true;
+        }
+        return false;
+      });
+
+      for (const availability of overlappingAvailability) {
+        const availabilityStart = new Date(availability.start);
+        const availabilityEnd = new Date(availability.end);
+        let availabilityModified = false;
+
+        if (eventStart <= availabilityStart && eventEnd >= availabilityEnd) {
+          // The timeslot completely contains the availability, so remove the availability
+          availabilityModified = true;
+        } else if (eventStart <= availabilityStart) {
+          // The timeslot overlaps with the beginning of the availability, so adjust the start time
+          updatedAvailabilities.push({
+            start: eventEnd,
+            end: availabilityEnd,
+          });
+          availabilityModified = true;
+        } else if (eventEnd >= availabilityEnd) {
+          // The timeslot overlaps with the end of the availability, so adjust the end time
+          updatedAvailabilities.push({
+            start: availabilityStart,
+            end: eventStart,
+          });
+          availabilityModified = true;
+        } else {
+          // The timeslot is in the middle of the availability, so split it into two availabilities
+          const newAvailability1 = {
+            start: availabilityStart,
+            end: eventStart,
+          };
+          const newAvailability2 = {
+            start: eventEnd,
+            end: availabilityEnd,
+          };
+          updatedAvailabilities.push(newAvailability1, newAvailability2);
+          availabilityModified = true;
+        }
+
+        const availabilityIndex = updatedAvailabilities.findIndex((item) => {
+          return (
+            item.start === availability.start && item.end === availability.end
+          );
+        });
+
+        if (availabilityModified && availabilityIndex >= 0) {
+          updatedAvailabilities.splice(availabilityIndex, 1);
+        }
+      }
+    }
+
+    return updatedAvailabilities;
+  }
+
+  private getOverlappingEvents(
+    availabilities: TimeSlot[],
+    events: TimeSlot[],
+  ): TimeSlot[] {
+    const overlappingEventsArray = [];
+
+    for (const availability of availabilities) {
+      const availabilityStart = new Date(availability.start);
+      const availabilityEnd = new Date(availability.end);
+      const overlappingEvents = [];
+
+      // 1: Check if any of the events overlap with the availability;
       for (const event of events) {
         // Check if the timeslot overlaps with the availability
         const eventStart = new Date(event.start);
         const eventEnd = new Date(event.end);
-        const availabilityStart = new Date(availability.start);
-        const availabilityEnd = new Date(availability.end);
 
         if (eventStart < availabilityEnd && eventEnd > availabilityStart) {
           // Check if event overlaps the availability in any way
-          if (eventStart <= availabilityStart && eventEnd >= availabilityEnd) {
-            // The timeslot completely contains the availability, so remove the availability
-            availabilityModified = true;
-          } else if (eventStart <= availabilityStart) {
-            // The timeslot overlaps with the beginning of the availability, so adjust the start time
-            newAvailabilities.push({
-              start: eventStart,
-              end: availabilityEnd,
-            });
-            availabilityModified = true;
-          } else if (eventEnd >= availabilityEnd) {
-            // The timeslot overlaps with the end of the availability, so adjust the end time
-            newAvailabilities.push({
-              start: availabilityStart,
-              end: eventEnd,
-            });
-            availabilityModified = true;
-          } else {
-            // The timeslot is in the middle of the availability, so split it into two availabilities
-            const newAvailability1 = {
-              start: availabilityStart,
-              end: eventStart,
-            };
-            const newAvailability2 = {
-              start: eventEnd,
-              end: availabilityEnd,
-            };
-            newAvailabilities.push(newAvailability1, newAvailability2);
-            availabilityModified = true;
-          }
+          overlappingEvents.push({
+            start: eventStart,
+            end: eventEnd,
+          });
         }
       }
 
-      // Add the availability to the new array if it hasn't been modified
-      if (!availabilityModified) {
-        newAvailabilities.push(availability);
+      overlappingEventsArray.push(overlappingEvents);
+    }
+
+    return this.mergeOverlappingEvents(overlappingEventsArray.flat());
+  }
+
+  private mergeOverlappingEvents(events: TimeSlot[]): TimeSlot[] {
+    if (!events || events.length <= 1) return events;
+
+    events.sort((a, b) => Number(a.start) - Number(b.start));
+
+    const mergedIntervals = [];
+    let currentInterval = events[0];
+
+    for (let i = 1; i < events.length; i++) {
+      const nextInterval = events[i];
+
+      if (nextInterval.start <= currentInterval.end) {
+        // the next interval overlaps with the current interval, so merge them
+        currentInterval.end = new Date(
+          Math.max(currentInterval.end.getTime(), nextInterval.end.getTime()),
+        );
+      } else {
+        // the next interval does not overlap with the current interval, so add the current interval to the merged intervals array
+        mergedIntervals.push(currentInterval);
+        currentInterval = nextInterval;
       }
     }
 
-    return newAvailabilities;
+    // add the last interval to the merged intervals array
+    mergedIntervals.push(currentInterval);
+
+    return mergedIntervals;
   }
 
   updateSchedule(schedule, time) {

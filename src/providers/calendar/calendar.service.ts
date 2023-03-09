@@ -56,7 +56,16 @@ export class CalendarService {
         };
       });
 
-    return parsedData;
+    return removeDuplicatesByKey(parsedData, 'htmlLink');
+
+    function removeDuplicatesByKey(array, key) {
+      return array.filter((item, index) => {
+        const firstIndex = array.findIndex(
+          (element) => element[key] === item[key],
+        );
+        return index === firstIndex;
+      });
+    }
   }
 
   async createEvent(details: CreateEventDetails): Promise<void> {
