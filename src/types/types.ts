@@ -60,3 +60,9 @@ export enum Temperature {
   High = 0.75,
   Max = 1,
 }
+
+export interface TimeSlot {
+  start: Date;
+  end: Date;
+  time?: number;
+}

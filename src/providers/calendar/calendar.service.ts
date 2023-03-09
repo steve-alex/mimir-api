@@ -1,15 +1,16 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { getToken } from './google-api-auth';
 import { AccountService } from '../../models/accounts/account.service';
-import { AvailabilityDTO } from '../../models/availability/availability.type';
+import { CreateEventDetails } from './calendar.entity';
+import { TimeSlot } from '../../types/types';
 
 @Injectable()
 export class CalendarService {
   constructor(@Inject(AccountService) private accountService: AccountService) {}
 
-  async getScheduledEvents(
-    availabilities: AvailabilityDTO[],
-  ): Promise<AvailabilityDTO[]> {
+  async getScheduledEventTimeSlots(
+    availabilities: TimeSlot[],
+  ): Promise<TimeSlot[]> {
     const accessToken = await this.accountService.getOAuthCode(1);
     const calendarId = await this.getCalendarId(accessToken);
 
@@ -58,10 +59,10 @@ export class CalendarService {
     return parsedData;
   }
 
-  async createEvent(req: any) {
+  async createEvent(details: CreateEventDetails): Promise<void> {
+    const { title, start, end } = details;
     const accessToken = await this.accountService.getOAuthCode(1);
     const calendarId = await this.getCalendarId(accessToken);
-    const { title, start, end } = req;
     // set the event details
     const event = {
       summary: title,
@@ -87,7 +88,13 @@ export class CalendarService {
         body: JSON.stringify(event),
       },
     );
-    return '';
+
+    if (!response.ok) {
+      const errorResponse = await response.json();
+      throw new Error(
+        `Unable to create event with details - ${details} | Error Message: ${errorResponse.error.message}`,
+      );
+    }
   }
 
   async getValidationUrl() {
