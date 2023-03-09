@@ -3,7 +3,8 @@ import { Availability } from './availability.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Account } from '../accounts/account.entity';
-import { AvailabilityDTO, IAvailability } from './availability.type';
+import { IAvailability } from './availability.type';
+import { TimeSlot } from '../../types/types';
 
 @Injectable()
 export class AvailabilityService {
@@ -15,12 +16,9 @@ export class AvailabilityService {
   ) {}
 
   async get(details: IAvailability): Promise<Availability[]> {
-    console.log(
-      '🚀 ~ file: availability.service.ts:18 ~ AvailabilityService ~ get ~ details:',
-      details,
-    );
     const where: any = {};
 
+    // TODO - update this with more parameters
     if (details?.accountId) {
       where.account = {};
       where.account.id = details.accountId;
@@ -50,17 +48,19 @@ export class AvailabilityService {
   }
 
   /**
-   * Get the upcoming 2 weeks worth of availabilities
+   * Takes the user's availabilities and returns all the available timeslots for the upcoming n days
    */
-  async getUpcomingAvailabilities(
-    accountId: number,
-  ): Promise<AvailabilityDTO[]> {
+  async getUpcomingAvailableTimeSlots(accountId: number): Promise<TimeSlot[]> {
     const rawAvailabilities = await this.get({ accountId, deleted: false });
+    // TODO - get the days ahead you want to schedule and pass it to getParsedUpcomingAvailabilities
+
+    // TODO - test that this actually works, I think the condition needs to be comprehensive
+    if (!rawAvailabilities.length) return [];
 
     const sortedRawAvailabilities =
       this.sortAvailabilitiesByDate(rawAvailabilities);
 
-    return this.getParsedUpcomingAvailabilities(sortedRawAvailabilities);
+    return this.getUpcomingTimeSlots(sortedRawAvailabilities);
   }
 
   /**
@@ -80,18 +80,18 @@ export class AvailabilityService {
   }
 
   /**
-   * Takes the availabilities and returns the upcoming 2 weeks worth of parsed availabilities
+   * Takes the availabilities and returns the upcoming n days worth of time slots
    */
-  private getParsedUpcomingAvailabilities(
-    availabilities: Availability[],
-  ): AvailabilityDTO[] {
+  private getUpcomingTimeSlots(availabilities: Availability[]): TimeSlot[] {
     const parsedAvailabilities = [];
     const currentDate = new Date();
 
+    // TODO - use n days
     for (let i = 0; i < 14; i++) {
       const currentDayOfWeek = currentDate.getDay();
 
       for (const availability of availabilities) {
+        // TODO - convert to camelCase? We'd need to encode availability when it's retrieved
         const { day_of_week, start_time, end_time } = availability;
 
         if (day_of_week === currentDayOfWeek.toString()) {
@@ -112,9 +112,10 @@ export class AvailabilityService {
   }
 
   /**
-   * Takes a time, and and a day off set and creates a new DateTime with that time day
+   * Takes a time, and and a day offset and creates a new DateTime
    */
   private parseDateTime(time: string, offset: number): Date {
+    // TODO - triple check this logic, backwards and forwards!
     const dateTime = new Date();
     dateTime.setHours(parseInt(time.slice(0, 2)));
     dateTime.setMinutes(parseInt(time.slice(3, 5)));

@@ -11,7 +11,7 @@ export class JobController {
   @Post('schedule-content')
   async scheduleContent(@Req() req: Request): Promise<Response<any>> {
     // const accountId = req.body.accountId;
-    const content = await this.jobService.scheduleContentInInbox(1);
+    const content = await this.jobService.scheduleContent(1);
     return {
       statusCode: HttpStatus.OK,
       message: 'Scheduled content in inbox',

@@ -21,7 +21,7 @@ export class Availability {
   account: Account;
 
   @Column({ type: 'varchar' })
-  day_of_week: string; // Thursday, Friday, etc.
+  day_of_week: string; // 1 = "Monday", 2 = "Tuesday" etc.
 
   @Column({ type: 'time' })
   start_time: string; // 05:00:00, 06:00:00, etc.

@@ -2,9 +2,8 @@ import { Inject, Injectable } from '@nestjs/common';
 import { AvailabilityService } from '../availability/availability.service';
 import { CalendarService } from '../../providers/calendar/calendar.service';
 import { ContentService } from '../content/content.service';
-import { Status } from '../content/content.entity';
-import { Availability } from '../availability/availability.entity';
-import { AvailabilityDTO } from '../availability/availability.type';
+import { Content, Status } from '../content/content.entity';
+import { TimeSlot } from '../../types/types';
 
 @Injectable()
 export class JobService {
@@ -27,62 +26,72 @@ export class JobService {
       status: Status.Inbox,
     });
 
-    if (!content.length) return;
+    if (!content.length) return; // TODO - this needs to be handled more completely
 
     const availabilities =
-      await this.availabilityService.getUpcomingAvailabilities(accountId);
+      await this.availabilityService.getUpcomingAvailableTimeSlots(accountId);
 
-    const events = await this.calendarService.getScheduledEvents(
+    if (!availabilities.length)
+      throw new Error('User has no availabilities set');
+
+    const events = await this.calendarService.getScheduledEventTimeSlots(
       availabilities,
     );
 
-    const updatedAvailabilities = this.removeEventsFromAvailabilities(
-      availabilities,
-      events,
+    const updatedAvailabilities = this.addTimeToAvailabilities(
+      this.removeEventsFromAvailabilities(availabilities, events),
     );
 
-    // const mappedSchedule = this.addTimeToSlots(schedule);
-    // for (const c of content) {
-    //   const time = c.time;
+    await this.runScheduleContent(content, updatedAvailabilities);
+  }
 
-    //   for (const s of mappedSchedule) {
-    //     if (s.time > time) {
-    //       try {
-    //         await Promise.all([
-    //           this.calendarService.createEvent({
-    //             title: c.title,
-    //             start: s.start,
-    //             end: new Date(s.start.getTime() + time * 60000),
-    //           }),
-    //           // this.contentService.updateContent({
-    //           //   id: c.id,
-    //           //   status: Status.Saved,
-    //           // }),
-    //           // this.notionService.updatePage({})
-    //         ]);
+  private async runScheduleContent(
+    content: Content[],
+    availabilities: TimeSlot[],
+  ): Promise<void> {
+    for (const c of content) {
+      const time = c.time;
 
-    //         this.updateSchedule(s, time);
-    //         break;
-    //       } catch (err) {
-    //         console.log('err =>', err);
-    //         console.error(
-    //           `Unable to schedule event - ${c} in availability - ${s}`,
-    //         );
-    //         continue;
-    //       }
-    //     }
-    //   }
-    // }
+      for (const a of availabilities) {
+        if (a.time > time) {
+          try {
+            await Promise.all([
+              this.calendarService.createEvent({
+                title: c.title,
+                start: a.start,
+                end: new Date(a.start.getTime() + time * 60000),
+              }),
+              this.contentService.updateContent({
+                id: c.id,
+                status: Status.Saved,
+              }),
+              // this.notionService.updatePage({})
+            ]);
+
+            this.updateSchedule(a, time);
+            break;
+          } catch (err) {
+            console.log('err =>', err);
+            console.error(
+              `Unable to schedule event - ${c} in availability - ${a}`,
+            );
+            continue;
+          }
+        }
+      }
+    }
   }
 
   /**
    * Takes an array of availabilities and then modifies it by removing the overlapping events;
    */
   private removeEventsFromAvailabilities(
-    availabilities: AvailabilityDTO[],
-    events: AvailabilityDTO[],
-  ): AvailabilityDTO[] {
+    availabilities: TimeSlot[],
+    events: TimeSlot[],
+  ): TimeSlot[] {
     const newAvailabilities = [];
+
+    if (!events.length) return availabilities;
 
     for (const availability of availabilities) {
       let availabilityModified = false;
@@ -144,11 +153,14 @@ export class JobService {
     schedule.time = schedule.time - time;
   }
 
-  addTimeToSlots(schedule: any[]) {
-    return schedule.map((s) => {
+  /**
+   * Add the time in minutes to each availability
+   */
+  addTimeToAvailabilities(availabilities: TimeSlot[]): TimeSlot[] {
+    return availabilities.map((a) => {
       return {
-        ...s,
-        time: getMinuteDifference(s.end, s.start),
+        ...a,
+        time: getMinuteDifference(a.end, a.start),
       };
     });
 
