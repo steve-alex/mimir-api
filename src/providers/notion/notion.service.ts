@@ -12,14 +12,16 @@ export class NotionService {
     this.notion = new Client({ auth: process.env.NOTION_API_KEY });
   }
 
+  // TODO - A lot of these functions need return types
   async createPage(pageDetails: NotionPageDetails): Promise<any> {
+    // TODO - update the return type of this function
     const { title, creator, categories, time, summary, url, medium } =
       pageDetails;
     const categoryIds = await this.retrieveCategoryIds(categories);
     const pageContent = this.getPageContent(summary);
 
     try {
-      await this.notion.pages.create({
+      const response = await this.notion.pages.create({
         parent: {
           type: 'database_id',
           database_id: process.env.NOTION_MAIN_DB_ID,
@@ -67,17 +69,17 @@ export class NotionService {
         },
         children: pageContent,
       });
+
+      return {
+        pageDetails: { ...pageDetails, notion_id: response.id, categoryIds },
+        status: 'SUCCESS',
+      };
     } catch (err) {
       return {
         pageDetails: null,
         status: 'ERROR',
       };
     }
-
-    return {
-      pageDetails: { ...pageDetails, categoryIds },
-      status: 'SUCCESS',
-    };
   }
 
   private getPageContent(text: string) {
@@ -116,7 +118,7 @@ export class NotionService {
     ];
   }
 
-  async retrieveCategoryIds(categories: string[]) {
+  private async retrieveCategoryIds(categories: string[]) {
     const categoryIdArray = [];
     try {
       for (const c of categories) {
@@ -170,7 +172,7 @@ export class NotionService {
     return categoryIdArray;
   }
 
-  async createCategory(category: string) {
+  private async createCategory(category: string) {
     return this.notion.pages.create({
       parent: {
         type: 'database_id',
@@ -194,6 +196,24 @@ export class NotionService {
     if (medium === Medium.WebPage) return 'Web Page';
     if (medium === Medium.YouTube) return 'YouTube';
     return 'Other';
+  }
+
+  async updatePage(
+    pageId: string,
+    pageDetails: NotionPageDetails,
+  ): Promise<void> {
+    const { status } = pageDetails;
+    const updatedProperties = {
+      Status: {
+        select: {
+          name: status,
+        },
+      },
+    };
+    await this.notion.pages.update({
+      page_id: pageId,
+      properties: updatedProperties,
+    });
   }
 
   async getAllItems() {

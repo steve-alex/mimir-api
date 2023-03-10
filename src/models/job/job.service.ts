@@ -4,16 +4,19 @@ import { CalendarService } from '../../providers/calendar/calendar.service';
 import { ContentService } from '../content/content.service';
 import { Content, Status } from '../content/content.entity';
 import { TimeSlot } from '../../types/types';
+import { NotionService } from '../../providers/notion/notion.service';
 
 @Injectable()
 export class JobService {
   constructor(
-    @Inject(ContentService)
-    private contentService: ContentService,
     @Inject(AvailabilityService)
     private availabilityService: AvailabilityService,
+    @Inject(ContentService)
+    private contentService: ContentService,
     @Inject(CalendarService)
     private calendarService: CalendarService,
+    @Inject(NotionService)
+    private notionService: NotionService,
   ) {}
 
   /**
@@ -26,7 +29,8 @@ export class JobService {
       status: Status.Inbox,
     });
 
-    if (!content.length) return; // TODO - this needs to be handled more completely
+    if (!content.length) return;
+    // TODO - handle this more completely (depends on caller of function)
 
     const availabilities =
       await this.availabilityService.getUpcomingAvailableTimeSlots(accountId);
@@ -65,7 +69,9 @@ export class JobService {
                 id: c.id,
                 status: Status.Saved,
               }),
-              // this.notionService.updatePage({})
+              this.notionService.updatePage(c.notion_id, {
+                status: Status.Saved,
+              }),
             ]);
 
             this.updateSchedule(a, time);

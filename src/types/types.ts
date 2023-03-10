@@ -1,3 +1,4 @@
+import { Status } from '../models/content/content.entity';
 import { Medium } from '../models/content/content.type';
 
 export class UpdateUserDTO {
@@ -13,6 +14,8 @@ export interface NotionPageDetails {
   categories?: string[];
   summary?: string;
   time?: string;
+  status?: Status;
+  notion_id?: string;
 }
 
 export interface WebpageDetails {

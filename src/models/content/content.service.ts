@@ -166,6 +166,7 @@ export class ContentService {
         categories: contentDetails.categories,
         summary: contentDetails.summary,
         time: contentDetails.time,
+        notion_id: contentDetails.notion_id,
       };
       return this.contentRepository.insert(parsedContentDetails);
     } catch (err) {

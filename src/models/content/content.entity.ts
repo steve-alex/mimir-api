@@ -13,16 +13,19 @@ import { Account } from '../accounts/account.entity';
 import { Medium } from './content.type';
 
 export enum Status {
-  Inbox = 'inbox',
-  Saved = 'saved',
-  Archive = 'archive',
-  Done = 'done',
+  Inbox = 'Inbox',
+  Saved = 'Saved',
+  Archive = 'Archive',
+  Done = 'Done',
 }
 
 @Entity({ name: 'content' })
 export class Content {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column()
+  notion_id: string;
 
   @ManyToOne(() => Account, (account) => account.id)
   @JoinColumn({ name: 'accountId' })
