@@ -2,7 +2,6 @@ import { Repository } from 'typeorm';
 import { Availability } from './availability.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Account } from '../accounts/account.entity';
 import { AvailabilityDTO, IAvailability } from './availability.type';
 import { TimeSlot } from '../../types/types';
 
@@ -127,13 +126,13 @@ export class AvailabilityService {
   }
 
   private encodeAvailability(availability: Availability): AvailabilityDTO {
-    return {
-      id: availability.id,
-      accountId: availability.account.id,
-      deleted: availability.deleted,
-      dayOfWeek: availability.day_of_week,
-      startTime: availability.start_time,
-      endTime: availability.end_time,
-    };
+    return Object.assign(
+      {},
+      availability.id && { id: availability.id },
+      availability.deleted && { deleted: availability.deleted },
+      availability.day_of_week && { dayOfWeek: availability.day_of_week },
+      availability.start_time && { startTime: availability.start_time },
+      availability.end_time && { endTime: availability.end_time },
+    );
   }
 }
