@@ -3,7 +3,7 @@ import { Repository } from 'typeorm';
 import { Account } from './account.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { AccountDTO, CreatAccountDTO, UpdateAccountDTO } from './account.type';
+import { AccountDTO, UpdateAccountDTO } from './account.type';
 import { OAuth, OAuthProvider } from '../../providers/calendar/oauth.entity';
 
 @Injectable()
@@ -15,28 +15,30 @@ export class AccountService {
     private oAuthRepository: Repository<OAuth>,
   ) {}
 
-  async getAccount(account: AccountDTO): Promise<AccountDTO> {
-    const { id, name, email, password } = account;
+  async getAccount(details: AccountDTO): Promise<AccountDTO> {
+    const { id, name, email } = details;
     const searchParams: any = {};
+
     if (id) searchParams.id = id;
     if (name) searchParams.name = name;
     if (email) searchParams.email = email;
-    if (password) searchParams.password = password;
-    return this.accountRepository.findOneBy(searchParams);
+
+    const account = await this.accountRepository.findOneBy(searchParams);
+
+    return this.encodeAccont(account);
   }
 
-  async createAccount(userDetails: CreatAccountDTO): Promise<AccountDTO> {
-    const { name, email, password } = userDetails;
-    const saltOrRounds = 10;
-    const hashedPassword = await bcrypt.hash(password, saltOrRounds);
+  async createAccount(details: AccountDTO): Promise<AccountDTO> {
+    const { name, email, password } = details;
+    const salt = 10;
 
+    const hashedPassword = await bcrypt.hash(password, salt);
     const createResult = await this.accountRepository.insert({
       name,
       email,
       password: hashedPassword,
     });
 
-    // TODO - According to REST what should I be passing here? Whatever it is, is it necessary?
     return { name, id: createResult.raw[0].id };
   }
 
@@ -44,12 +46,14 @@ export class AccountService {
     const account = await this.accountRepository.findOne({
       where: { id: accountId },
     });
+
     const oAuth = new OAuth();
     oAuth.refresh_token = tokens.refreshToken;
     oAuth.access_token = tokens.accessToken;
     oAuth.provider = OAuthProvider.GoogleCalendar;
     oAuth.account = account;
     oAuth.valid = true;
+
     await this.oAuthRepository.save(oAuth);
   }
 
@@ -66,11 +70,19 @@ export class AccountService {
     return record.access_token;
   }
 
+  private encodeAccont(accountDetails: Account): AccountDTO {
+    const encodedAccount = Object.assign({}, accountDetails);
+    delete encodedAccount.password;
+    return encodedAccount;
+  }
+
   async updateAccount(userDetails: UpdateAccountDTO): Promise<AccountDTO> {
+    // TODO - implement this function
     return {};
   }
 
   async deleteAccount(userDetails: AccountDTO): Promise<AccountDTO> {
+    // TODO - implement this function
     return {};
   }
 }

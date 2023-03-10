@@ -61,13 +61,13 @@ export class AccountController {
 
   @UseFilters(AllExceptionsFilter)
   @Delete()
-  @HttpCode(200)
-  async deleteAccount(@Body() user: AccountDTO): Promise<Response<AccountDTO>> {
-    const account = await this.accountService.deleteAccount(user);
+  @HttpCode(204)
+  async deleteAccount(@Body() user: AccountDTO): Promise<Response<null>> {
+    await this.accountService.deleteAccount(user);
     return {
       statusCode: HttpStatus.OK,
       message: 'Account successfully updated',
-      data: account,
+      data: null,
     };
   }
 }
