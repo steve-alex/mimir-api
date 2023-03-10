@@ -2,7 +2,7 @@ import { Repository } from 'typeorm';
 import { Availability } from './availability.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AvailabilityDTO, IAvailability } from './availability.type';
+import { AvailabilityDTO } from './availability.type';
 import { TimeSlot } from '../../types/types';
 
 @Injectable()
@@ -12,11 +12,7 @@ export class AvailabilityService {
     private availabilityRepository: Repository<Availability>,
   ) {}
 
-  async list(accountId: number): Promise<IAvailability[]> {
-    return [];
-  }
-
-  async get(details: IAvailability): Promise<Availability[]> {
+  async list(details: AvailabilityDTO): Promise<AvailabilityDTO[]> {
     const where: any = {};
 
     if (details?.accountId) {
@@ -26,7 +22,9 @@ export class AvailabilityService {
     if (details?.deleted === false || details?.deleted === true)
       where.deleted = details.deleted;
 
-    return this.availabilityRepository.find({ where });
+    const availabilities = await this.availabilityRepository.find({ where });
+
+    return availabilities.map((a) => this.encodeAvailability(a));
   }
 
   async create(details: AvailabilityDTO): Promise<AvailabilityDTO> {
@@ -52,7 +50,7 @@ export class AvailabilityService {
    * Takes the user's availabilities and returns all the available timeslots for the upcoming n days
    */
   async getUpcomingAvailableTimeSlots(accountId: number): Promise<TimeSlot[]> {
-    const rawAvailabilities = await this.get({ accountId, deleted: false });
+    const rawAvailabilities = await this.list({ accountId, deleted: false });
     // TODO - get the days ahead you want to schedule and pass it to getParsedUpcomingAvailabilities
 
     // TODO - test that this actually works, I think the condition needs to be comprehensive
@@ -68,22 +66,22 @@ export class AvailabilityService {
    * Sorts the availabilities by ascending order of time
    */
   private sortAvailabilitiesByDate(
-    availabilities: Availability[],
-  ): Availability[] {
+    availabilities: AvailabilityDTO[],
+  ): AvailabilityDTO[] {
     return availabilities.sort((a, b) => {
       // sort in ascending order of days
-      if (a.day_of_week !== b.day_of_week) {
-        return Number(a.day_of_week) - Number(b.day_of_week);
+      if (a.dayOfWeek !== b.dayOfWeek) {
+        return Number(a.dayOfWeek) - Number(b.dayOfWeek);
       }
       // if the days are the same, sort in ascending order of time
-      return a.start_time.localeCompare(b.start_time);
+      return a.startTime.localeCompare(b.startTime);
     });
   }
 
   /**
    * Takes the availabilities and returns the upcoming n days worth of time slots
    */
-  private getUpcomingTimeSlots(availabilities: Availability[]): TimeSlot[] {
+  private getUpcomingTimeSlots(availabilities: AvailabilityDTO[]): TimeSlot[] {
     const parsedAvailabilities = [];
     const currentDate = new Date();
 
@@ -93,11 +91,11 @@ export class AvailabilityService {
 
       for (const availability of availabilities) {
         // TODO - convert to camelCase? We'd need to encode availability when it's retrieved
-        const { day_of_week, start_time, end_time } = availability;
+        const { dayOfWeek, startTime, endTime } = availability;
 
-        if (day_of_week === currentDayOfWeek.toString()) {
-          const startDateTime = this.parseDateTime(start_time, i);
-          const endDateTime = this.parseDateTime(end_time, i);
+        if (dayOfWeek === currentDayOfWeek.toString()) {
+          const startDateTime = this.parseDateTime(startTime, i);
+          const endDateTime = this.parseDateTime(endTime, i);
 
           parsedAvailabilities.push({
             start: startDateTime,

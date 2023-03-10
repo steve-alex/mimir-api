@@ -4,10 +4,10 @@ export interface IAvailability {
 }
 
 export interface AvailabilityDTO {
-  id: number;
-  accountId: number;
-  deleted: boolean;
-  dayOfWeek: string;
-  startTime: string;
-  endTime: string;
+  id?: number;
+  accountId?: number;
+  deleted?: boolean;
+  dayOfWeek?: string;
+  startTime?: string;
+  endTime?: string;
 }

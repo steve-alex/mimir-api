@@ -35,7 +35,7 @@ export class AvailabilityController {
   @HttpCode(201)
   async getAvailabilities(): Promise<Response<any>> {
     const accountId = 1;
-    const account = await this.availabilityService.list(accountId);
+    const account = await this.availabilityService.list({ accountId });
     return {
       statusCode: HttpStatus.OK,
       message: 'Availabilities successfully retrieved',
