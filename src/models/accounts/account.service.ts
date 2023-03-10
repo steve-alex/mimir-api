@@ -70,19 +70,36 @@ export class AccountService {
     return record.access_token;
   }
 
+  async updateAccount(details: AccountDTO): Promise<AccountDTO> {
+    const updatedAccount = new Account();
+    updatedAccount.id = details.id;
+    if (details?.name) updatedAccount.name = details.name;
+    if (details?.email) updatedAccount.email = details.email;
+    if (details?.password) {
+      const salt = 10;
+      const hashedPassword = await bcrypt.hash(details?.password, salt);
+      updatedAccount.password = hashedPassword;
+    }
+
+    const queryResult = await this.accountRepository
+      .createQueryBuilder()
+      .update(Account)
+      .set(updatedAccount)
+      .where('id = :id', { id: details.id })
+      .returning('*')
+      .execute();
+
+    return this.encodeAccont(queryResult.raw[0]);
+  }
+
   private encodeAccont(accountDetails: Account): AccountDTO {
     const encodedAccount = Object.assign({}, accountDetails);
     delete encodedAccount.password;
     return encodedAccount;
   }
 
-  async updateAccount(userDetails: UpdateAccountDTO): Promise<AccountDTO> {
+  async deleteAccount(userDetails: AccountDTO): Promise<void> {
     // TODO - implement this function
-    return {};
-  }
-
-  async deleteAccount(userDetails: AccountDTO): Promise<AccountDTO> {
-    // TODO - implement this function
-    return {};
+    return;
   }
 }
