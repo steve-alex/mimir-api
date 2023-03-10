@@ -58,14 +58,12 @@ export class AccountService {
   }
 
   async getOAuthCode(accountId: number): Promise<string> {
-    const record = await this.oAuthRepository.findOne({
-      where: {
-        account: {
-          id: accountId,
-        },
-        valid: true,
-      },
-    });
+    const record = await this.oAuthRepository
+      .createQueryBuilder('oauth')
+      .leftJoin('oauth.account', 'account')
+      .where('account.id = :accountId', { accountId })
+      .andWhere('oauth.valid = :valid', { valid: true })
+      .getOne();
 
     return record.access_token;
   }
