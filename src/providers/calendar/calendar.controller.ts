@@ -31,11 +31,11 @@ export class CalendarController {
 
   @Post()
   async createEvent(@Req() req: Request): Promise<Response<any>> {
-    const events = await this.calendarService.createEvent(req);
+    // const events = await this.calendarService.createEvent(req);
     return {
       statusCode: HttpStatus.OK,
       message: 'Retrieved calanedar events',
-      data: events,
+      data: [],
     };
   }
 
