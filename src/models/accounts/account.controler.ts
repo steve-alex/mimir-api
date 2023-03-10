@@ -20,18 +20,6 @@ export class AccountController {
   constructor(private readonly accountService: AccountService) {}
 
   @UseFilters(AllExceptionsFilter)
-  @Get(':id')
-  @HttpCode(200)
-  async getAccount(@Param() params): Promise<Response<AccountDTO>> {
-    const account = await this.accountService.getAccount(params.id);
-    return {
-      statusCode: HttpStatus.OK,
-      message: 'Account successfully found',
-      data: account,
-    };
-  }
-
-  @UseFilters(AllExceptionsFilter)
   @Post()
   @HttpCode(201)
   async createAccount(
@@ -41,6 +29,18 @@ export class AccountController {
     return {
       statusCode: HttpStatus.OK,
       message: 'Account successfully created',
+      data: account,
+    };
+  }
+
+  @UseFilters(AllExceptionsFilter)
+  @Get(':id')
+  @HttpCode(200)
+  async getAccount(@Param() params): Promise<Response<AccountDTO>> {
+    const account = await this.accountService.getAccount(params.id);
+    return {
+      statusCode: HttpStatus.OK,
+      message: 'Account successfully found',
       data: account,
     };
   }
@@ -63,10 +63,10 @@ export class AccountController {
   @Delete()
   @HttpCode(204)
   async deleteAccount(@Body() user: AccountDTO): Promise<Response<null>> {
-    await this.accountService.deleteAccount(user);
+    await this.accountService.deleteAccount(user.id);
     return {
       statusCode: HttpStatus.OK,
-      message: 'Account successfully updated',
+      message: 'Account successfully deleted',
       data: null,
     };
   }

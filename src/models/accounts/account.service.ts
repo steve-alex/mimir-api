@@ -15,6 +15,20 @@ export class AccountService {
     private oAuthRepository: Repository<OAuth>,
   ) {}
 
+  async createAccount(details: AccountDTO): Promise<AccountDTO> {
+    const { name, email, password } = details;
+    const salt = 10;
+
+    const hashedPassword = await bcrypt.hash(password, salt);
+    const createResult = await this.accountRepository.insert({
+      name,
+      email,
+      password: hashedPassword,
+    });
+
+    return { name, id: createResult.raw[0].id };
+  }
+
   async getAccount(details: AccountDTO): Promise<AccountDTO> {
     const { id, name, email } = details;
     const searchParams: any = {};
@@ -28,18 +42,40 @@ export class AccountService {
     return this.encodeAccont(account);
   }
 
-  async createAccount(details: AccountDTO): Promise<AccountDTO> {
-    const { name, email, password } = details;
-    const salt = 10;
+  async updateAccount(details: AccountDTO): Promise<AccountDTO> {
+    const updatedAccount = new Account();
+    updatedAccount.id = details.id;
+    if (details?.name) updatedAccount.name = details.name;
+    if (details?.email) updatedAccount.email = details.email;
+    if (details?.password) {
+      const salt = 10;
+      const hashedPassword = await bcrypt.hash(details?.password, salt);
+      updatedAccount.password = hashedPassword;
+    }
 
-    const hashedPassword = await bcrypt.hash(password, salt);
-    const createResult = await this.accountRepository.insert({
-      name,
-      email,
-      password: hashedPassword,
-    });
+    const queryResult = await this.accountRepository
+      .createQueryBuilder()
+      .update(Account)
+      .set(updatedAccount)
+      .where('id = :id', { id: details.id })
+      .returning('*')
+      .execute();
 
-    return { name, id: createResult.raw[0].id };
+    return this.encodeAccont(queryResult.raw[0]);
+  }
+
+  async deleteAccount(accountId: number): Promise<void> {
+    await this.oAuthRepository
+      .createQueryBuilder()
+      .delete()
+      .where('account = :accountId', { accountId })
+      .execute();
+  }
+
+  private encodeAccont(accountDetails: Account): AccountDTO {
+    const encodedAccount = Object.assign({}, accountDetails);
+    delete encodedAccount.password;
+    return encodedAccount;
   }
 
   async storeAuthTokens(
@@ -71,38 +107,5 @@ export class AccountService {
       .getOne();
 
     return record.access_token;
-  }
-
-  async updateAccount(details: AccountDTO): Promise<AccountDTO> {
-    const updatedAccount = new Account();
-    updatedAccount.id = details.id;
-    if (details?.name) updatedAccount.name = details.name;
-    if (details?.email) updatedAccount.email = details.email;
-    if (details?.password) {
-      const salt = 10;
-      const hashedPassword = await bcrypt.hash(details?.password, salt);
-      updatedAccount.password = hashedPassword;
-    }
-
-    const queryResult = await this.accountRepository
-      .createQueryBuilder()
-      .update(Account)
-      .set(updatedAccount)
-      .where('id = :id', { id: details.id })
-      .returning('*')
-      .execute();
-
-    return this.encodeAccont(queryResult.raw[0]);
-  }
-
-  private encodeAccont(accountDetails: Account): AccountDTO {
-    const encodedAccount = Object.assign({}, accountDetails);
-    delete encodedAccount.password;
-    return encodedAccount;
-  }
-
-  async deleteAccount(userDetails: AccountDTO): Promise<void> {
-    // TODO - implement this function
-    return;
   }
 }
