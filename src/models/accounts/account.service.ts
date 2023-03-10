@@ -31,7 +31,7 @@ export class AccountService {
 
   async getAccount(details: AccountDTO): Promise<AccountDTO> {
     const { id, name, email } = details;
-    const searchParams: any = {};
+    const searchParams: AccountDTO = {};
 
     if (id) searchParams.id = id;
     if (name) searchParams.name = name;

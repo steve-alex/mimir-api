@@ -13,7 +13,7 @@ import {
 import { AccountService } from './account.service';
 import { AllExceptionsFilter } from '../../shared/exceptions';
 import { Response } from '../../types/types';
-import { AccountDTO, CreatAccountDTO, UpdateAccountDTO } from './account.type';
+import { AccountDTO } from './account.type';
 
 @Controller('account')
 export class AccountController {
@@ -22,9 +22,7 @@ export class AccountController {
   @UseFilters(AllExceptionsFilter)
   @Post()
   @HttpCode(201)
-  async createAccount(
-    @Body() user: CreatAccountDTO,
-  ): Promise<Response<AccountDTO>> {
+  async createAccount(@Body() user: AccountDTO): Promise<Response<AccountDTO>> {
     const account = await this.accountService.createAccount(user);
     return {
       statusCode: HttpStatus.OK,
@@ -48,9 +46,7 @@ export class AccountController {
   @UseFilters(AllExceptionsFilter)
   @Put()
   @HttpCode(200)
-  async updateAccount(
-    @Body() user: UpdateAccountDTO,
-  ): Promise<Response<AccountDTO>> {
+  async updateAccount(@Body() user: AccountDTO): Promise<Response<AccountDTO>> {
     const account = await this.accountService.updateAccount(user);
     return {
       statusCode: HttpStatus.OK,
