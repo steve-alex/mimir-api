@@ -3,7 +3,7 @@ import { Repository } from 'typeorm';
 import { Account } from './account.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt';
-import { AccountDTO, UpdateAccountDTO } from './account.type';
+import { AccountDTO, OAuthTokenDetails } from './account.type';
 import { OAuth, OAuthProvider } from '../../providers/calendar/oauth.entity';
 
 @Injectable()
@@ -42,19 +42,24 @@ export class AccountService {
     return { name, id: createResult.raw[0].id };
   }
 
-  async storeAuthTokens(tokens: any, accountId: number): Promise<void> {
-    const account = await this.accountRepository.findOne({
-      where: { id: accountId },
-    });
+  async storeAuthTokens(
+    details: OAuthTokenDetails,
+    accountId: number,
+  ): Promise<void> {
+    const insert = {
+      refresh_token: details.refreshToken,
+      access_token: details.accessToken,
+      provider: OAuthProvider.GoogleCalendar,
+      account: { id: accountId },
+      valid: true,
+    };
 
-    const oAuth = new OAuth();
-    oAuth.refresh_token = tokens.refreshToken;
-    oAuth.access_token = tokens.accessToken;
-    oAuth.provider = OAuthProvider.GoogleCalendar;
-    oAuth.account = account;
-    oAuth.valid = true;
-
-    await this.oAuthRepository.save(oAuth);
+    await this.oAuthRepository
+      .createQueryBuilder()
+      .insert()
+      .into(OAuth)
+      .values(insert)
+      .execute();
   }
 
   async getOAuthCode(accountId: number): Promise<string> {
