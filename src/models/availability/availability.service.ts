@@ -3,7 +3,7 @@ import { Availability } from './availability.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Account } from '../accounts/account.entity';
-import { IAvailability } from './availability.type';
+import { AvailabilityDTO, IAvailability } from './availability.type';
 import { TimeSlot } from '../../types/types';
 
 @Injectable()
@@ -11,14 +11,15 @@ export class AvailabilityService {
   constructor(
     @InjectRepository(Availability)
     private availabilityRepository: Repository<Availability>,
-    @InjectRepository(Account)
-    private accountRepository: Repository<Account>,
   ) {}
+
+  async list(accountId: number): Promise<IAvailability[]> {
+    return [];
+  }
 
   async get(details: IAvailability): Promise<Availability[]> {
     const where: any = {};
 
-    // TODO - update this with more parameters
     if (details?.accountId) {
       where.account = {};
       where.account.id = details.accountId;
@@ -29,22 +30,23 @@ export class AvailabilityService {
     return this.availabilityRepository.find({ where });
   }
 
-  async create(details: any) {
-    const account = await this.accountRepository.findOne({
-      where: {
-        id: details.accountId,
-      },
-    });
-
-    const parsedDetails = {
+  async create(details: AvailabilityDTO): Promise<AvailabilityDTO> {
+    const insert = {
       day_of_week: details.dayOfWeek,
       start_time: details.startTime,
       end_time: details.endTime,
       deleted: false,
-      account,
+      account: { id: details.accountId },
     };
 
-    await this.availabilityRepository.insert(parsedDetails);
+    const response = await this.availabilityRepository
+      .createQueryBuilder()
+      .insert()
+      .into(Availability)
+      .values(insert)
+      .execute();
+
+    return this.encodeAvailability(response.raw[0]);
   }
 
   /**
@@ -122,5 +124,16 @@ export class AvailabilityService {
     dateTime.setSeconds(parseInt(time.slice(6, 8)));
     dateTime.setDate(dateTime.getDate() + offset);
     return dateTime;
+  }
+
+  private encodeAvailability(availability: Availability): AvailabilityDTO {
+    return {
+      id: availability.id,
+      accountId: availability.account.id,
+      deleted: availability.deleted,
+      dayOfWeek: availability.day_of_week,
+      startTime: availability.start_time,
+      endTime: availability.end_time,
+    };
   }
 }
