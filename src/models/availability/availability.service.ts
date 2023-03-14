@@ -12,21 +12,6 @@ export class AvailabilityService {
     private availabilityRepository: Repository<Availability>,
   ) {}
 
-  async list(details: AvailabilityDTO): Promise<AvailabilityDTO[]> {
-    const where: any = {};
-
-    if (details?.accountId) {
-      where.account = {};
-      where.account.id = details.accountId;
-    }
-    if (details?.deleted === false || details?.deleted === true)
-      where.deleted = details.deleted;
-
-    const availabilities = await this.availabilityRepository.find({ where });
-
-    return availabilities.map((a) => this.encodeAvailability(a));
-  }
-
   async create(details: AvailabilityDTO): Promise<AvailabilityDTO> {
     const insert = {
       day_of_week: details.dayOfWeek,
@@ -44,6 +29,21 @@ export class AvailabilityService {
       .execute();
 
     return this.encodeAvailability(response.raw[0]);
+  }
+
+  async list(details: AvailabilityDTO): Promise<AvailabilityDTO[]> {
+    const where: any = {};
+
+    if (details?.accountId) {
+      where.account = {};
+      where.account.id = details.accountId;
+    }
+    if (details?.deleted === false || details?.deleted === true)
+      where.deleted = details.deleted;
+
+    const availabilities = await this.availabilityRepository.find({ where });
+
+    return availabilities.map((a) => this.encodeAvailability(a));
   }
 
   /**
