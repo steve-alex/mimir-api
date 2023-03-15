@@ -46,6 +46,33 @@ export class AvailabilityService {
     return availabilities.map((a) => this.encodeAvailability(a));
   }
 
+  async update(details: AvailabilityDTO): Promise<AvailabilityDTO> {
+    const updatedAvailability = new Availability();
+    updatedAvailability.id = details.id;
+    if (details?.deleted) updatedAvailability.deleted = details.deleted;
+    if (details?.dayOfWeek) updatedAvailability.day_of_week = details.dayOfWeek;
+    if (details?.startTime) updatedAvailability.start_time = details.startTime;
+    if (details?.endTime) updatedAvailability.end_time = details.endTime;
+
+    const queryResult = await this.availabilityRepository
+      .createQueryBuilder()
+      .update(Availability)
+      .set(updatedAvailability)
+      .where('id = :id', { id: details.id })
+      .returning('*')
+      .execute();
+
+    return this.encodeAvailability(queryResult.raw[0]);
+  }
+
+  async delete(availabilityId: number): Promise<void> {
+    await this.availabilityRepository
+      .createQueryBuilder()
+      .delete()
+      .where('id = :availabilityId', { availabilityId })
+      .execute();
+  }
+
   /**
    * Takes the user's availabilities and returns all the available timeslots for the upcoming n days
    */
