@@ -225,33 +225,8 @@ export class InsightService {
       return { categories, summary };
     }
 
-    const chunks = [];
-    const chunkSize = this.getChunkSize(text.length);
-
-    for (let i = 0; i < text.length; i += chunkSize) {
-      chunks.push(text.slice(i, i + chunkSize));
-    }
-
-    const results: any = await Promise.all(
-      chunks.map(async (chunk) =>
-        this.runYouTubeVideoInsightsExtraction(chunk, temp),
-      ),
-    );
-
-    const categoriesChunks = results.reduce(
-      (acc, prev) => acc + prev?.categories,
-      '',
-    );
-    const summaryChunks = results.reduce(
-      (acc, prev) => acc + prev?.summary,
-      '',
-    );
-
-    const { categories, summary } = await this.compileYouTubeInsights(
-      categoriesChunks,
-      summaryChunks,
-      temp,
-    );
+    const { categories, summary } =
+      await this.runLongYouTubeVideoInsightExtraction(text, temp);
 
     return { categories, summary };
   }
@@ -288,6 +263,44 @@ export class InsightService {
       categories,
       summary,
     };
+  }
+
+  async runLongYouTubeVideoInsightExtraction(
+    text: string,
+    temp?: number,
+  ): Promise<YouTubeVideoInsights> {
+    const chunks = [];
+    const chunkSize = this.getChunkSize(text.length);
+
+    // 1. Split text into multiple seperate pieces of text
+    for (let i = 0; i < text.length; i += chunkSize) {
+      chunks.push(text.slice(i, i + chunkSize));
+    }
+
+    // 2. Run metadata extraction seperately on each text
+    const results: any = await Promise.all(
+      chunks.map(async (chunk) =>
+        this.runYouTubeVideoInsightsExtraction(chunk, temp),
+      ),
+    );
+
+    const categoriesChunks = results.reduce(
+      (acc, prev) => acc + prev?.categories,
+      '',
+    );
+    const summaryChunks = results.reduce(
+      (acc, prev) => acc + prev?.summary,
+      '',
+    );
+
+    // 3. Compile results from metadata extraction into single result
+    const { categories, summary } = await this.compileYouTubeInsights(
+      categoriesChunks,
+      summaryChunks,
+      temp,
+    );
+
+    return { categories, summary };
   }
 
   async compileYouTubeInsights(
