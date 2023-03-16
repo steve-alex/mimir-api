@@ -22,41 +22,8 @@ export class InsightService {
       return { title, author, readingTime, categories, summary };
     }
 
-    const chunks = [];
-    const chunkSize = this.getChunkSize(text.length);
-
-    for (let i = 0; i < text.length; i += chunkSize) {
-      chunks.push(text.slice(i, i + chunkSize));
-    }
-
-    const results: any = await Promise.all(
-      chunks.map(async (chunk) =>
-        this.runWebpageMetaDataExtraction(chunk, temp),
-      ),
-    );
-
-    const authorChunks = results.reduce((acc, prev) => acc + prev?.author, '');
-    const readingTimeChunks = results.reduce(
-      (acc, prev) => acc + `${prev?.readingTime} Minutes `,
-      '',
-    );
-    const categoriesChunks = results.reduce(
-      (acc, prev) => acc + prev?.categories,
-      '',
-    );
-    const summaryChunks = results.reduce(
-      (acc, prev) => acc + prev?.summary,
-      '',
-    );
-
     const { author, readingTime, categories, summary } =
-      await this.compileSummaryAndMetaData(
-        authorChunks,
-        readingTimeChunks,
-        categoriesChunks,
-        summaryChunks,
-        temp,
-      );
+      await this.runLongWebpageMetaDataExtraction(text, temp);
 
     return { title, author, readingTime, categories, summary };
   }
@@ -66,11 +33,11 @@ export class InsightService {
     content: string;
   } {
     const $ = cheerio.load(html);
+    const title = getTitle();
+
     const htmlElements = $('body')
       .find('p, h1, h2, h3, h4, h5, h6, li, a, span')
       .children();
-
-    const title = getTitle();
 
     let content = '';
     htmlElements.each((index, element) => {
@@ -136,7 +103,7 @@ export class InsightService {
       .split(',')
       .filter((t) => t !== '')
       .filter((t) => t.length < 99)
-      .map((t) => t.replace(/(?:\r\n|\r|\n)/g, '').replace(/^\s+|\s+$/g, '')); // TODO write comment describing all of this
+      .map((t) => t.replace(/(?:\r\n|\r|\n)/g, '').replace(/^\s+|\s+$/g, '')); // removes any line breaks and leading/trailing whitespaces
 
     const summary = answer.split('Summary:')[1];
 
@@ -146,6 +113,52 @@ export class InsightService {
       categories,
       summary,
     };
+  }
+
+  async runLongWebpageMetaDataExtraction(
+    text: string,
+    temp?: number,
+  ): Promise<WebpageDetails> {
+    const chunks = [];
+    const chunkSize = this.getChunkSize(text.length);
+
+    // 1. Split text into multiple seperate pieces of text
+    for (let i = 0; i < text.length; i += chunkSize) {
+      chunks.push(text.slice(i, i + chunkSize));
+    }
+
+    // 2. Run metadata extraction seperately on each text
+    const results: any = await Promise.all(
+      chunks.map(async (chunk) =>
+        this.runWebpageMetaDataExtraction(chunk, temp),
+      ),
+    );
+
+    const authorChunks = results.reduce((acc, prev) => acc + prev?.author, '');
+    const readingTimeChunks = results.reduce(
+      (acc, prev) => acc + `${prev?.readingTime} Minutes `,
+      '',
+    );
+    const categoriesChunks = results.reduce(
+      (acc, prev) => acc + prev?.categories,
+      '',
+    );
+    const summaryChunks = results.reduce(
+      (acc, prev) => acc + prev?.summary,
+      '',
+    );
+
+    // 3. Compile results from metadata extraction into single result
+    const { author, readingTime, categories, summary } =
+      await this.compileSummaryAndMetaData(
+        authorChunks,
+        readingTimeChunks,
+        categoriesChunks,
+        summaryChunks,
+        temp,
+      );
+
+    return { author, readingTime, categories, summary };
   }
 
   async compileSummaryAndMetaData(
@@ -188,7 +201,7 @@ export class InsightService {
       .split(',')
       .filter((t) => t !== '')
       .filter((t) => t.length < 99)
-      .map((t) => t.replace(/(?:\r\n|\r|\n)/g, '').replace(/^\s+|\s+$/g, '')); // TODO write comment describing all of this
+      .map((t) => t.replace(/(?:\r\n|\r|\n)/g, '').replace(/^\s+|\s+$/g, '')); // removes any line breaks and leading/trailing whitespaces
 
     const summary = answer.split('Summary:')[1];
 
@@ -267,7 +280,7 @@ export class InsightService {
       .split(',')
       .filter((t) => t !== '')
       .filter((t) => t.length < 99)
-      .map((t) => t.replace(/(?:\r\n|\r|\n)/g, '').replace(/^\s+|\s+$/g, '')); // TODO write comment describing all of this
+      .map((t) => t.replace(/(?:\r\n|\r|\n)/g, '').replace(/^\s+|\s+$/g, '')); // removes any line breaks and leading/trailing whitespaces
 
     const summary = answer.split('Summary:')[1];
 
@@ -300,7 +313,7 @@ export class InsightService {
       .split(',')
       .filter((t) => t !== '')
       .filter((t) => t.length < 99)
-      .map((t) => t.replace(/(?:\r\n|\r|\n)/g, '').replace(/^\s+|\s+$/g, '')); // TODO write comment describing all of this
+      .map((t) => t.replace(/(?:\r\n|\r|\n)/g, '').replace(/^\s+|\s+$/g, '')); // removes any line breaks and leading/trailing whitespaces
 
     const summary = answer.split('Summary:')[1];
 
@@ -310,9 +323,14 @@ export class InsightService {
     };
   }
 
+  /**
+   * Splits the text into chunks of up to 14000 which is the limit set by higher calling functions
+   * The upper limit is set at 70000 because it starts to cost too much at this point
+   */
   getChunkSize(length: number): number {
-    if (length > 55000) throw Error('This is basically a book bro');
-    if (length <= 55000 && length >= 41000) return length / 4;
-    if (length < 41000) return length / 3;
+    if (length > 70000) throw Error('Exceeded the limit for content length');
+    if (length <= 70000 && length >= 56000) return length / 5;
+    if (length <= 56000 && length >= 42000) return length / 4;
+    if (length < 42000) return length / 3;
   }
 }
