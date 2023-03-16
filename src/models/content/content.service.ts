@@ -1,17 +1,19 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { NotionService } from '../../providers/notion/notion.service';
 import { InsightService } from '../../providers/insights/insight.service';
-import {
-  ContentType,
-  Temperature,
-  YouTubeVideoDetails,
-  YouTubeVideoMetadata,
-} from '../../types/types';
 import YoutubeTranscript from 'youtube-transcript';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Content } from './content.entity';
 import { Repository } from 'typeorm';
-import { IContent, Medium } from './content.type';
+import {
+  ContentType,
+  IContent,
+  Medium,
+  YouTubeVideoDetails,
+  YouTubeVideoMetadata,
+} from './content.type';
+import { Temperature } from '../../providers/openai/openai.type';
+import { NotionPageDetails } from '../../providers/notion/notion.type';
 
 @Injectable()
 export class ContentService {
@@ -37,14 +39,12 @@ export class ContentService {
     console.log('createContent!');
     const contentDetails = await this.getContentDetails(req.body);
 
-    const { pageDetails, status } = await this.notionService.createPage({
+    const pageDetails = await this.notionService.createPage({
       url: req.body.url,
       ...contentDetails,
     });
 
-    if (status === 'SUCCESS') {
-      await this.storeContent(pageDetails);
-    }
+    await this.storeContent(pageDetails);
   }
 
   async updateContent(body: any): Promise<void> {
@@ -155,10 +155,10 @@ export class ContentService {
     return ContentType.WebPage;
   }
 
-  async storeContent(contentDetails: any): Promise<any> {
+  async storeContent(contentDetails: NotionPageDetails): Promise<any> {
     try {
       const parsedContentDetails = {
-        category_ids: contentDetails.categoryIds.map((item) => item.id),
+        category_ids: contentDetails.categoryIds,
         title: contentDetails.title,
         creator: contentDetails.creator,
         url: contentDetails.url,
@@ -166,7 +166,7 @@ export class ContentService {
         categories: contentDetails.categories,
         summary: contentDetails.summary,
         time: contentDetails.time,
-        notion_id: contentDetails.notion_id,
+        notion_id: contentDetails.notionId,
       };
       return this.contentRepository.insert(parsedContentDetails);
     } catch (err) {
