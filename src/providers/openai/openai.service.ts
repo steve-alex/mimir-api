@@ -30,12 +30,14 @@ export class OpenAIService {
   async createCompletion(
     prompt: string,
     temperature = Temperature.Low,
+    maxTokens = 2000,
   ): Promise<string> {
     try {
       const response = await this.openai.createCompletion({
-        model: 'gpt-3.5-turbo',
+        model: 'text-davinci-003',
         prompt,
         temperature,
+        max_tokens: maxTokens,
       });
 
       return response.data.choices[0].text;
