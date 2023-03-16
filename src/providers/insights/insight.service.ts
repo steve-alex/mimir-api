@@ -316,41 +316,4 @@ export class InsightService {
     if (length <= 55000 && length >= 41000) return length / 4;
     if (length < 41000) return length / 3;
   }
-
-  async getStringSimilarity(a: string, b: string): Promise<number> {
-    const vectorA = await this.getEmbeddingVector(a);
-    const vectorB = await this.getEmbeddingVector(b);
-    return this.cosineSimilarity(vectorA, vectorB);
-  }
-
-  private async getEmbeddingVector(text: string): Promise<number[]> {
-    const response = await this.openAIService.createEmbedding(text);
-    return [1];
-  }
-
-  /**
-   * Returns the similarity between between 2 normalised vectors, the returns a value between 0 and 1
-   * https://www.geeksforgeeks.org/cosine-similarity/
-   * https://beta.openai.com/docs/guides/embeddings/which-distance-function-should-i-use
-   *
-   * @param {*} a First embedding vector normalised to 1
-   * @param {*} b Second embedding vector normalised to 1
-   * @returns
-   */
-  private cosineSimilarity = (a: number[], b: number[]): number => {
-    let dotproduct = 0;
-    let mA = 0;
-    let mB = 0;
-
-    for (let i = 0; i < a.length; i++) {
-      dotproduct += a[i] * b[i];
-      mA += a[i] * a[i];
-      mB += b[i] * b[i];
-    }
-
-    mA = Math.sqrt(mA);
-    mB = Math.sqrt(mB);
-
-    return dotproduct / (mA * mB);
-  };
 }
