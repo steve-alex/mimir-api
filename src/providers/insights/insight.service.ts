@@ -101,21 +101,20 @@ export class InsightService {
     text: string,
     temp?: number,
   ): Promise<WebpageDetails> {
-    //TODO - Update this so that users can update their reading speed!
     const answer = await this.openAIService.createCompletion(
-      `{1} Does this text reference the main author? Yes? Return the author's name? No? Return ''.
-       {2} How long in minutes would this take to read for an extremely fast reader?
-       {3} Tag the 5 most relevant and broad categories. Return in the following format {1},{2},{3},{4},{5}
-       {4} Write a detailed description of the points from the following text in a style that maximises information retention. RETURN THE ANSWER AS BULLET POINTS.
+      `START: ${text} :END
 
-       Return in the following format:
+       {1} Does this text above reference the main author? Yes? Return the author's name? No? Return ''.
+       {2} How long in minutes would this text take to read for an extremely fast reader?
+       {3} Tag the 5 most relevant and broad categories of the text. Return in the following format {1},{2},{3},{4},{5}
+       {4} Write a detailed description of the points from the above text in a style that maximises information retention. RETURN THE ANSWER AS BULLET POINTS.
+
+       Return your answer in the following format:
 
        Author: {1} \n
        Reading Time: {2} \n
        Categories: {3} \n
-       Summary: {4}
-
-      ${text}`,
+       Summary: {4}`,
       temp,
     );
 
