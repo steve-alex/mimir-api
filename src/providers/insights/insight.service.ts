@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { OpenAIService } from '../openai/openai.service';
-import { WebpageDetails, YouTubeVideoInsights } from '../../types/types';
 import * as cheerio from 'cheerio';
+import { WebpageDetails, YouTubeVideoInsights } from './insights.type';
 
 @Injectable()
 export class InsightService {
@@ -102,7 +102,7 @@ export class InsightService {
     temp?: number,
   ): Promise<WebpageDetails> {
     //TODO - Update this so that users can update their reading speed!
-    const response = await this.openAIService.createCompletion(
+    const answer = await this.openAIService.createCompletion(
       `{1} Does this text reference the main author? Yes? Return the author's name? No? Return ''.
        {2} How long in minutes would this take to read for an extremely fast reader?
        {3} Tag the 5 most relevant and broad categories. Return in the following format {1},{2},{3},{4},{5}
@@ -119,18 +119,18 @@ export class InsightService {
       temp,
     );
 
-    const author = response.data.choices[0].text
+    const author = answer
       .split('\n')
       .find((t) => t.includes('Author:'))
       .split('Author:')[1];
 
-    const readingTime = response.data.choices[0].text
+    const readingTime = answer
       .split('\n')
       .find((t) => t.includes('Reading Time:'))
       .split('Reading Time:')[1]
       .split(' ')[1];
 
-    const categories = response.data.choices[0].text
+    const categories = answer
       .split('\n')
       .find((t) => t.includes('Categories:'))
       .split('Categories:')[1]
@@ -139,7 +139,7 @@ export class InsightService {
       .filter((t) => t.length < 99)
       .map((t) => t.replace(/(?:\r\n|\r|\n)/g, '').replace(/^\s+|\s+$/g, '')); // TODO write comment describing all of this
 
-    const summary = response.data.choices[0].text.split('Summary:')[1];
+    const summary = answer.split('Summary:')[1];
 
     return {
       author,
@@ -156,7 +156,7 @@ export class InsightService {
     summaryChunks: string,
     temp?: number,
   ): Promise<WebpageDetails> {
-    const response = await this.openAIService.createCompletion(
+    const answer = await this.openAIService.createCompletion(
       `{1} Select the main author from the following options: ${authorChunks}.
        {2} Sum the total reading time from the following: ${readingTimeChunks}.
        {3} Compile the 5 most relevant and broad categories from the following: ${categoriesChunks}. Return in the following format {1},{2},{3},{4},{5}
@@ -171,18 +171,18 @@ export class InsightService {
       temp,
     );
 
-    const author = response.data.choices[0].text
+    const author = answer
       .split('\n')
       .find((t) => t.includes('Author:'))
       .split('Author:')[1];
 
-    const readingTime = response.data.choices[0].text
+    const readingTime = answer
       .split('\n')
       .find((t) => t.includes('Reading Time:'))
       .split('Reading Time:')[1]
       .split(' ')[1];
 
-    const categories = response.data.choices[0].text
+    const categories = answer
       .split('\n')
       .find((t) => t.includes('Categories:'))
       .split('Categories:')[1]
@@ -191,7 +191,7 @@ export class InsightService {
       .filter((t) => t.length < 99)
       .map((t) => t.replace(/(?:\r\n|\r|\n)/g, '').replace(/^\s+|\s+$/g, '')); // TODO write comment describing all of this
 
-    const summary = response.data.choices[0].text.split('Summary:')[1];
+    const summary = answer.split('Summary:')[1];
 
     return {
       author,
@@ -248,7 +248,7 @@ export class InsightService {
     text: string,
     temp?: number,
   ): Promise<YouTubeVideoInsights> {
-    const response = await this.openAIService.createCompletion(
+    const answer = await this.openAIService.createCompletion(
       `1) Tag the 5 most relevant and broad categories. Return in the following format {1},{2},{3},{4},{5}
        2) Write a detailed description of the points from the following text in a style that maximises information retention. RETURN THE ANSWER AS BULLET POINTS.
 
@@ -261,7 +261,7 @@ export class InsightService {
       temp,
     );
 
-    const categories = response.data.choices[0].text
+    const categories = answer
       .split('\n')
       .find((t) => t.includes('Categories:'))
       .split('Categories:')[1]
@@ -270,7 +270,7 @@ export class InsightService {
       .filter((t) => t.length < 99)
       .map((t) => t.replace(/(?:\r\n|\r|\n)/g, '').replace(/^\s+|\s+$/g, '')); // TODO write comment describing all of this
 
-    const summary = response.data.choices[0].text.split('Summary:')[1];
+    const summary = answer.split('Summary:')[1];
 
     return {
       categories,
@@ -283,7 +283,7 @@ export class InsightService {
     summaryChunks: string,
     temp?: number,
   ): Promise<YouTubeVideoInsights> {
-    const response = await this.openAIService.createCompletion(
+    const answer = await this.openAIService.createCompletion(
       `Combine the 5 most relevant and broad categories from the following: ${categoriesChunks}. Return in the following format {1},{2},{3},{4},{5}
        Combine the bullet points from the following text: ${summaryChunks}. Write in a descriptive format that maximises information retention. RETURN THE ANSWER AS BULLET POINTS.
 
@@ -294,7 +294,7 @@ export class InsightService {
       temp,
     );
 
-    const categories = response.data.choices[0].text
+    const categories = answer
       .split('\n')
       .find((t) => t.includes('Categories:'))
       .split('Categories:')[1]
@@ -303,7 +303,7 @@ export class InsightService {
       .filter((t) => t.length < 99)
       .map((t) => t.replace(/(?:\r\n|\r|\n)/g, '').replace(/^\s+|\s+$/g, '')); // TODO write comment describing all of this
 
-    const summary = response.data.choices[0].text.split('Summary:')[1];
+    const summary = answer.split('Summary:')[1];
 
     return {
       categories,
