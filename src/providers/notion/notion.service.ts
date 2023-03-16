@@ -192,11 +192,8 @@ export class NotionService {
     return 'Other';
   }
 
-  async updatePage(
-    pageId: string,
-    pageDetails: NotionPageDetails,
-  ): Promise<void> {
-    const { status } = pageDetails;
+  async updatePage(pageId: string, details: NotionPageDetails): Promise<void> {
+    const { status } = details;
     const updatedProperties = {
       Status: {
         select: {
