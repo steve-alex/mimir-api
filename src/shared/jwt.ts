@@ -12,6 +12,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
+  // TODO - Get this working again!
   // async validate(payload: any) {
   //   const user = await this.authService.validateUser(payload.sub);
   //   if (!user) {
