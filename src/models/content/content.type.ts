@@ -22,8 +22,3 @@ export type YouTubeVideoMetadata = Pick<
   YouTubeVideoDetails,
   'title' | 'creator' | 'videoLength'
 >;
-
-export enum ContentType {
-  YouTube = 'youtube',
-  WebPage = 'web-page',
-}

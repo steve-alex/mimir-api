@@ -6,7 +6,6 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Content } from './content.entity';
 import { Repository } from 'typeorm';
 import {
-  ContentType,
   IContent,
   Medium,
   YouTubeVideoDetails,
@@ -44,6 +43,8 @@ export class ContentService {
       ...contentDetails,
     });
 
+    // TODO - add accountId to pageDetails;
+
     await this.storeContent(pageDetails);
   }
 
@@ -59,10 +60,10 @@ export class ContentService {
     html: string;
   }): Promise<any> {
     const { url, html } = body;
-    const contentType = this.getContentType(url);
+    const medium = this.getMedium(url);
 
     // TODO - At what level of concerns should the temperature
-    if (contentType === ContentType.WebPage) {
+    if (medium === Medium.WebPage) {
       const { title, author, categories, summary, readingTime } =
         await this.insightService.getWebPageDetails(html, Temperature.Low);
 
@@ -76,7 +77,7 @@ export class ContentService {
       };
     }
 
-    if (contentType === ContentType.YouTube) {
+    if (medium === Medium.YouTube) {
       const { title, creator, categories, summary, videoLength } =
         await this.getYouTubeVideoDetails(url);
 
@@ -148,11 +149,11 @@ export class ContentService {
     }
   }
 
-  private getContentType(url: string): ContentType {
+  private getMedium(url: string): Medium {
     if (url.toLowerCase().includes('www.youtube.com')) {
-      return ContentType.YouTube;
+      return Medium.YouTube;
     }
-    return ContentType.WebPage;
+    return Medium.WebPage;
   }
 
   async storeContent(contentDetails: NotionPageDetails): Promise<any> {
