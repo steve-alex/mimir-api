@@ -1,88 +1,77 @@
 import { Injectable } from '@nestjs/common';
 import { Client } from '@notionhq/client';
-import { NotionPageDetails } from '../../types/types';
 import { Medium } from '../../models/content/content.type';
+import { NotionPageDetails } from './notion.type';
+import { BlockObjectRequest } from '@notionhq/client/build/src/api-endpoints';
 
 @Injectable()
 export class NotionService {
-  notion;
-  baseUrl = 'https://api.notion.com/v1';
+  notion: Client;
 
+  // TODO - write descriptions of everything!
   constructor() {
     this.notion = new Client({ auth: process.env.NOTION_API_KEY });
   }
 
-  // TODO - A lot of these functions need return types
-  async createPage(pageDetails: NotionPageDetails): Promise<any> {
-    // TODO - update the return type of this function
-    const { title, creator, categories, time, summary, url, medium } =
-      pageDetails;
+  async createPage(details: NotionPageDetails): Promise<NotionPageDetails> {
+    const { title, creator, categories, time, summary, url, medium } = details;
+
     const categoryIds = await this.retrieveCategoryIds(categories);
     const pageContent = this.getPageContent(summary);
 
-    try {
-      const response = await this.notion.pages.create({
-        parent: {
-          type: 'database_id',
-          database_id: process.env.NOTION_MAIN_DB_ID,
+    const response = await this.notion.pages.create({
+      parent: {
+        type: 'database_id',
+        database_id: process.env.NOTION_MAIN_DB_ID,
+      },
+      properties: {
+        Name: {
+          title: [
+            {
+              text: {
+                content: title,
+              },
+            },
+          ],
         },
-        properties: {
-          Name: {
-            title: [
-              {
-                text: {
-                  content: title,
-                },
-              },
-            ],
-          },
-          Creator: {
-            select: {
-              name: creator,
-            },
-          },
-          Categories: {
-            relation: categoryIds,
-          },
-          Link: {
-            url,
-          },
-          Time: {
-            rich_text: [
-              {
-                text: {
-                  content: `${time}`,
-                },
-              },
-            ],
-          },
-          Status: {
-            select: {
-              name: 'Inbox',
-            },
-          },
-          Medium: {
-            select: {
-              name: this.parseMedium(medium),
-            },
+        Creator: {
+          select: {
+            name: creator,
           },
         },
-        children: pageContent,
-      });
+        Categories: {
+          multi_select: categoryIds.map((id) => ({ id })),
+        },
+        Link: {
+          url,
+        },
+        Time: {
+          rich_text: [
+            {
+              text: {
+                content: `${time}`,
+              },
+            },
+          ],
+        },
+        Status: {
+          select: {
+            name: 'Inbox',
+          },
+        },
+        Medium: {
+          select: {
+            name: this.parseMedium(medium),
+          },
+        },
+      },
+      children: pageContent,
+    });
 
-      return {
-        pageDetails: { ...pageDetails, notion_id: response.id, categoryIds },
-        status: 'SUCCESS',
-      };
-    } catch (err) {
-      return {
-        pageDetails: null,
-        status: 'ERROR',
-      };
-    }
+    return { ...details, notion_id: response.id, categoryIds };
   }
 
-  private getPageContent(text: string) {
+  private getPageContent(text: string): BlockObjectRequest[] {
     if (text) {
       return text.split(`\n`).map((text) => {
         return {
@@ -118,7 +107,8 @@ export class NotionService {
     ];
   }
 
-  private async retrieveCategoryIds(categories: string[]) {
+  // TODO - Refactor this whole function (has the Notion API been updated?)
+  private async retrieveCategoryIds(categories: string[]): Promise<string[]> {
     const categoryIdArray = [];
     try {
       for (const c of categories) {
@@ -214,23 +204,5 @@ export class NotionService {
       page_id: pageId,
       properties: updatedProperties,
     });
-  }
-
-  async getAllItems() {
-    try {
-      const response = await this.notion.databases.query({
-        database_id: process.env.NOTION_MAIN_DB_ID,
-      });
-      return response.results;
-    } catch (error) {
-      throw new Error('error'); // TODO - define error properly
-    }
-  }
-
-  async getItem() {
-    const response = await this.notion.databases.query({
-      database_id: process.env.NOTION_MAIN_DB_ID,
-    });
-    return response.results;
   }
 }
