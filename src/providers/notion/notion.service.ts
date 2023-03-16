@@ -8,7 +8,6 @@ import { BlockObjectRequest } from '@notionhq/client/build/src/api-endpoints';
 export class NotionService {
   notion: Client;
 
-  // TODO - write descriptions of everything!
   constructor() {
     this.notion = new Client({ auth: process.env.NOTION_API_KEY });
   }
@@ -22,7 +21,7 @@ export class NotionService {
     const response = await this.notion.pages.create({
       parent: {
         type: 'database_id',
-        database_id: process.env.NOTION_MAIN_DB_ID,
+        database_id: process.env.NOTION_MAIN_DB_ID, // TODO - This needs to come from the user
       },
       properties: {
         Name: {
@@ -40,7 +39,7 @@ export class NotionService {
           },
         },
         Categories: {
-          multi_select: categoryIds.map((id) => ({ id })),
+          relation: categoryIds.map((id) => ({ id })),
         },
         Link: {
           url,
@@ -68,7 +67,7 @@ export class NotionService {
       children: pageContent,
     });
 
-    return { ...details, notion_id: response.id, categoryIds };
+    return { ...details, notionId: response.id, categoryIds };
   }
 
   private getPageContent(text: string): BlockObjectRequest[] {
@@ -107,63 +106,66 @@ export class NotionService {
     ];
   }
 
-  // TODO - Refactor this whole function (has the Notion API been updated?)
   private async retrieveCategoryIds(categories: string[]): Promise<string[]> {
     const categoryIdArray = [];
-    try {
-      for (const c of categories) {
-        const searchResults = await this.notion.search({
-          query: c,
-          filter: {
-            value: 'page',
-            property: 'object',
-          },
-          sort: {
-            direction: 'ascending',
-            timestamp: 'last_edited_time',
-          },
-        });
 
-        let categoryFound = false;
+    for (const category of categories) {
+      try {
+        const categoryIds = await this.searchForExistingCategory(category);
 
-        if (!searchResults.results.length) {
-          const result = await this.createCategory(c);
-          categoryIdArray.push({
-            id: result.id,
-          });
-          categoryFound = true;
+        if (categoryIds) {
+          categoryIdArray.push(...categoryIds);
           continue;
         }
 
-        for (const result of searchResults.results) {
-          if (
-            result.parent.database_id === process.env.NOTION_CATEGORIES_DB_ID
-          ) {
-            categoryIdArray.push({
-              id: result?.id,
-            });
-            categoryFound = true;
-            break;
-          }
-        }
-
-        if (!categoryFound) {
-          const result = await this.createCategory(c);
-          categoryIdArray.push({
-            id: result.id,
-          });
-          categoryFound = true;
-        }
+        const categoryId = await this.createCategory(category);
+        categoryIdArray.push(categoryId);
+      } catch (err) {
+        console.error(
+          `Unable to retrieve or create a category for ${category} | err.message`,
+        );
       }
-    } catch (err) {
-      throw new Error(err.message);
     }
 
     return categoryIdArray;
   }
 
-  private async createCategory(category: string) {
-    return this.notion.pages.create({
+  private async searchForExistingCategory(
+    category: string,
+  ): Promise<string[] | null> {
+    let categoryIds = [];
+    const searchResults = await this.notion.search({
+      query: category,
+      filter: {
+        value: 'page',
+        property: 'object',
+      },
+      sort: {
+        direction: 'ascending',
+        timestamp: 'last_edited_time',
+      },
+    });
+
+    if (searchResults.results.length) {
+      categoryIds = searchResults.results
+        .map((result) => {
+          if (
+            result['parent']['database_id'] ===
+            process.env.NOTION_CATEGORIES_DB_ID
+          ) {
+            return result.id;
+          }
+        })
+        .filter((result) => result !== undefined);
+
+      return categoryIds;
+    }
+
+    return null;
+  }
+
+  private async createCategory(category: string): Promise<string> {
+    const result = await this.notion.pages.create({
       parent: {
         type: 'database_id',
         database_id: process.env.NOTION_CATEGORIES_DB_ID,
@@ -180,6 +182,8 @@ export class NotionService {
         },
       },
     });
+
+    return result.id;
   }
 
   private parseMedium(medium: Medium): string {
