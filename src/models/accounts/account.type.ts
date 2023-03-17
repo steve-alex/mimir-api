@@ -8,4 +8,5 @@ export interface AccountDTO {
 export interface OAuthTokenDetails {
   accessToken?: string;
   refreshToken?: string;
+  expiryDate?: number;
 }

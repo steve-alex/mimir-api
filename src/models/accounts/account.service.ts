@@ -65,7 +65,7 @@ export class AccountService {
   }
 
   async deleteAccount(accountId: number): Promise<void> {
-    await this.oAuthRepository
+    await this.accountRepository
       .createQueryBuilder()
       .delete()
       .where('account = :accountId', { accountId })
@@ -85,6 +85,7 @@ export class AccountService {
     const insert = {
       refresh_token: details.refreshToken,
       access_token: details.accessToken,
+      expiry_date: details.expiryDate,
       provider: OAuthProvider.GoogleCalendar,
       account: { id: accountId },
       valid: true,
@@ -98,7 +99,7 @@ export class AccountService {
       .execute();
   }
 
-  async getOAuthCode(accountId: number): Promise<string> {
+  async getOauthTokens(accountId: number): Promise<OAuthTokenDetails> {
     const record = await this.oAuthRepository
       .createQueryBuilder('oauth')
       .leftJoin('oauth.account', 'account')
@@ -106,6 +107,9 @@ export class AccountService {
       .andWhere('oauth.valid = :valid', { valid: true })
       .getOne();
 
-    return record.access_token;
+    return {
+      accessToken: record?.access_token,
+      refreshToken: record?.refresh_token,
+    };
   }
 }
