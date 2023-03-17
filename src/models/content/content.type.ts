@@ -22,3 +22,8 @@ export type YouTubeVideoMetadata = Pick<
   YouTubeVideoDetails,
   'title' | 'creator' | 'videoLength'
 >;
+
+export type YouTubeVideoInsights = Pick<
+  YouTubeVideoDetails,
+  'categories' | 'summary'
+>;

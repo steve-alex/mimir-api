@@ -1,5 +1,3 @@
-import { YouTubeVideoDetails } from '../../models/content/content.type';
-
 export interface WebpageDetails {
   title?: string;
   author: string;
@@ -7,8 +5,3 @@ export interface WebpageDetails {
   categories: string[];
   summary: string;
 }
-
-export type YouTubeVideoInsights = Pick<
-  YouTubeVideoDetails,
-  'categories' | 'summary'
->;
