@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 import { google } from 'googleapis';
+import { oAuthTokens } from './calendar.type';
 
 function makeOAuth2Client() {
   return new google.auth.OAuth2(
@@ -42,27 +43,21 @@ export async function getToken() {
   }
 }
 
-// TODO - strongly type this
 export async function swapAuthorizationCodeForTokens(
   code: string,
-): Promise<any> {
-  const clientId = process.env.GOOGLE_CALENDAR_CLIENT_ID; // replace with your Google API Console project's client ID
-  const clientSecret = process.env.GOOGLE_CALENDAR_CLIENT_SECRET; // replace with your Google API Console project's client secret
-  const redirectUri = process.env.GOOGLE_CALENDAR_REDIRECT_URL; // replace with your registered redirect URI
-
-  const url = 'https://oauth2.googleapis.com/token'; // Google OAuth2 token endpoint
-
-  // create a POST request to the Google OAuth2 token endpoint
+): Promise<oAuthTokens> {
+  const clientId = process.env.GOOGLE_CALENDAR_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CALENDAR_CLIENT_SECRET;
+  const redirectUri = process.env.GOOGLE_CALENDAR_REDIRECT_URL;
+  const oauthUrl = 'https://oauth2.googleapis.com/token';
   const options = {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: `client_id=${clientId}&client_secret=${clientSecret}&code=${code}&redirect_uri=${redirectUri}&grant_type=authorization_code`,
   };
 
-  // send the POST request using the Fetch API
-  const response = await fetch(url, options);
+  const response = await fetch(oauthUrl, options);
   const data = await response.json();
-  console.log('🚀 ~ file: google-api-auth.ts:65 ~ data:', data);
 
   const accessToken = data?.access_token;
   const refreshToken = data?.refresh_token;
