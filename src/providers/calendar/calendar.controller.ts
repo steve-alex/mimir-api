@@ -18,7 +18,7 @@ export class CalendarController {
   ) {}
 
   @Get('login')
-  async login(@Req() req: Request): Promise<Response<any>> {
+  async login(): Promise<Response<any>> {
     const url = await this.calendarService.getValidationUrl();
     return {
       statusCode: HttpStatus.OK,

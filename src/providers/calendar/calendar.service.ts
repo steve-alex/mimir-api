@@ -132,7 +132,7 @@ export class CalendarService {
   async getScheduledEventTimeSlots(
     availabilities: TimeSlot[],
   ): Promise<TimeSlot[]> {
-    const { accessToken } = await this.accountService.getOauthTokens(1);
+    const { accessToken } = await this.accountService.getOauthTokens(1); // TODO handle error here - what happens if there is no valid access token?
     const calendarId = await this.getCalendarId(accessToken);
 
     const responses = await Promise.all(
@@ -161,7 +161,7 @@ export class CalendarService {
       }),
     );
 
-    const data = await Promise.all(responses);
+    const data = await Promise.all(responses); //TODO - does this need to awaited again? Why is this built like that?
 
     const parsedData = data
       .filter((r) => r !== null)
@@ -179,6 +179,9 @@ export class CalendarService {
 
     return removeDuplicatesByKey(parsedData, 'htmlLink');
 
+    /**
+     * Removes any duplicate events caused by 2 timeslots encompassing an event
+     */
     function removeDuplicatesByKey(array, key) {
       return array.filter((item, index) => {
         const firstIndex = array.findIndex(
@@ -189,6 +192,9 @@ export class CalendarService {
     }
   }
 
+  /**
+   * Gets the id of the primary calendar used by the user
+   */
   private async getCalendarId(accessToken: string): Promise<string> {
     const url = `https://www.googleapis.com/calendar/v3/users/me/calendarList`;
     const headers = new Headers({
