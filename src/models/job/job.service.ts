@@ -102,11 +102,11 @@ export class JobService {
   ): TimeSlot[] {
     if (!events.length) return availabilities;
 
+    const updatedAvailabilities = [...availabilities];
     const overlappingEventArray = this.mergeOverlappingEvents(
       availabilities,
       events,
     );
-    const updatedAvailabilities = [...availabilities];
 
     for (const event of overlappingEventArray) {
       const eventStart = new Date(event.start);
