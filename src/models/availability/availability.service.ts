@@ -78,7 +78,6 @@ export class AvailabilityService {
    */
   async getUpcomingAvailableTimeSlots(accountId: number): Promise<TimeSlot[]> {
     const rawAvailabilities = await this.list({ accountId, deleted: false });
-    // TODO - get the days ahead you want to schedule and pass it to getParsedUpcomingAvailabilities
 
     // TODO - test that this actually works, I think the condition needs to be comprehensive
     if (!rawAvailabilities.length)
@@ -87,7 +86,8 @@ export class AvailabilityService {
     const sortedRawAvailabilities =
       this.sortAvailabilitiesByDate(rawAvailabilities);
 
-    return this.getUpcomingTimeSlots(sortedRawAvailabilities);
+    // TODO - get the days ahead from the user
+    return this.getUpcomingTimeSlotsForNDays(sortedRawAvailabilities, 14);
   }
 
   /**
@@ -109,11 +109,14 @@ export class AvailabilityService {
   /**
    * Takes the availabilities and returns the upcoming n days worth of time slots
    */
-  private getUpcomingTimeSlots(availabilities: AvailabilityDTO[]): TimeSlot[] {
+  private getUpcomingTimeSlotsForNDays(
+    availabilities: AvailabilityDTO[],
+    days: number,
+  ): TimeSlot[] {
     const parsedAvailabilities = [];
     const currentDate = new Date();
 
-    for (let i = 0; i < 14; i++) {
+    for (let i = 0; i < days; i++) {
       const currentDayOfWeek = currentDate.getDay();
 
       for (const availability of availabilities) {
