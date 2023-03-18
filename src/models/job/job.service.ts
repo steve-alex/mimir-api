@@ -30,25 +30,30 @@ export class JobService {
     });
 
     if (!content.length) return;
-    // TODO - handle this more completely (depends on caller of function)
 
     const availabilities =
       await this.availabilityService.getUpcomingAvailableTimeSlots(accountId);
-
-    if (!availabilities.length)
-      throw new Error('User has no availabilities set');
 
     const events = await this.calendarService.getScheduledEventTimeSlots(
       availabilities,
     );
 
-    const updatedAvailabilities = this.addTimeToAvailabilities(
-      this.removeEventsFromAvailabilities(availabilities, events),
+    const completeAvailabilities = this.removeEventsFromAvailabilities(
+      availabilities,
+      events,
     );
 
-    await this.runScheduleContent(content, updatedAvailabilities);
+    const availabilitiesWithTime = this.addTimeToAvailabilities(
+      completeAvailabilities,
+    );
+
+    await this.runScheduleContent(content, availabilitiesWithTime);
   }
 
+  /**
+   * Attempts to run scheduling for a given set of events within a given set of availabilities
+   * Creates an event in the calendar, updated the status for the DB record and the Notion
+   */
   private async runScheduleContent(
     content: Content[],
     availabilities: TimeSlot[],
@@ -74,12 +79,12 @@ export class JobService {
               }),
             ]);
 
-            this.updateSchedule(a, time);
+            // Shortens the availability once an event has been scheduled on it
+            this.removeTimeFromAvailability(a, time);
             break;
           } catch (err) {
-            console.log('err =>', err);
             console.error(
-              `Unable to schedule event - ${c} in availability - ${a}`,
+              `Unable to schedule event - ${c} in availability - ${a} | error: ${err.message}`,
             );
             continue;
           }
@@ -97,7 +102,7 @@ export class JobService {
   ): TimeSlot[] {
     if (!events.length) return availabilities;
 
-    const overlappingEventArray = this.getOverlappingEvents(
+    const overlappingEventArray = this.mergeOverlappingEvents(
       availabilities,
       events,
     );
@@ -169,6 +174,44 @@ export class JobService {
     return updatedAvailabilities;
   }
 
+  /**
+   * Returns an array of timeslots with overlapping events merged together
+   */
+  private mergeOverlappingEvents(
+    availabilities: TimeSlot[],
+    events: TimeSlot[],
+  ): TimeSlot[] {
+    const overlappingEvents = this.getOverlappingEvents(availabilities, events);
+
+    if (!overlappingEvents || overlappingEvents.length <= 1)
+      return overlappingEvents;
+
+    overlappingEvents.sort((a, b) => Number(a.start) - Number(b.start));
+
+    const mergedEvents = [];
+    let current = overlappingEvents[0];
+
+    for (let i = 1; i < overlappingEvents.length; i++) {
+      const next = overlappingEvents[i];
+
+      if (next.start <= current.end) {
+        // the next interval overlaps with the current interval, so merge them
+        current.end = new Date(
+          Math.max(current.end.getTime(), next.end.getTime()),
+        );
+      } else {
+        // the next interval does not overlap with the current interval, so add the current interval to the merged intervals array
+        mergedEvents.push(current);
+        current = next;
+      }
+    }
+
+    // add the last interval to the merged intervals array
+    mergedEvents.push(current);
+
+    return mergedEvents;
+  }
+
   private getOverlappingEvents(
     availabilities: TimeSlot[],
     events: TimeSlot[],
@@ -198,39 +241,10 @@ export class JobService {
       overlappingEventsArray.push(overlappingEvents);
     }
 
-    return this.mergeOverlappingEvents(overlappingEventsArray.flat());
+    return overlappingEventsArray;
   }
 
-  private mergeOverlappingEvents(events: TimeSlot[]): TimeSlot[] {
-    if (!events || events.length <= 1) return events;
-
-    events.sort((a, b) => Number(a.start) - Number(b.start));
-
-    const mergedIntervals = [];
-    let currentInterval = events[0];
-
-    for (let i = 1; i < events.length; i++) {
-      const nextInterval = events[i];
-
-      if (nextInterval.start <= currentInterval.end) {
-        // the next interval overlaps with the current interval, so merge them
-        currentInterval.end = new Date(
-          Math.max(currentInterval.end.getTime(), nextInterval.end.getTime()),
-        );
-      } else {
-        // the next interval does not overlap with the current interval, so add the current interval to the merged intervals array
-        mergedIntervals.push(currentInterval);
-        currentInterval = nextInterval;
-      }
-    }
-
-    // add the last interval to the merged intervals array
-    mergedIntervals.push(currentInterval);
-
-    return mergedIntervals;
-  }
-
-  updateSchedule(schedule, time) {
+  removeTimeFromAvailability(schedule, time) {
     const updatedTime = new Date(schedule.start.getTime() + time * 60000);
     schedule.start = updatedTime;
     schedule.time = schedule.time - time;

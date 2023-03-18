@@ -81,7 +81,8 @@ export class AvailabilityService {
     // TODO - get the days ahead you want to schedule and pass it to getParsedUpcomingAvailabilities
 
     // TODO - test that this actually works, I think the condition needs to be comprehensive
-    if (!rawAvailabilities.length) return [];
+    if (!rawAvailabilities.length)
+      throw new Error('User has no availabilities set');
 
     const sortedRawAvailabilities =
       this.sortAvailabilitiesByDate(rawAvailabilities);
@@ -112,12 +113,10 @@ export class AvailabilityService {
     const parsedAvailabilities = [];
     const currentDate = new Date();
 
-    // TODO - use n days
     for (let i = 0; i < 14; i++) {
       const currentDayOfWeek = currentDate.getDay();
 
       for (const availability of availabilities) {
-        // TODO - convert to camelCase? We'd need to encode availability when it's retrieved
         const { dayOfWeek, startTime, endTime } = availability;
 
         if (dayOfWeek === currentDayOfWeek.toString()) {
