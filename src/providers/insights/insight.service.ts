@@ -1,7 +1,12 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { OpenAIService } from '../openai/openai.service';
 import * as cheerio from 'cheerio';
-import { WebpageDetails, YouTubeVideoInsights } from './insights.type';
+import {
+  WebpageDetails,
+  YouTubeVideoInsights,
+  YouTubeVideoMetadata,
+} from './insights.type';
+import YoutubeTranscript from 'youtube-transcript';
 
 @Injectable()
 export class InsightService {
@@ -211,6 +216,62 @@ export class InsightService {
       categories,
       summary,
     };
+  }
+
+  async getYouTubeVideoDetails(url: string): Promise<YouTubeVideoDetails> {
+    const videoId = url.split('v=')[1];
+
+    const [transcript, { title, creator, videoLength }] = await Promise.all([
+      await YoutubeTranscript.fetchTranscript(videoId),
+      await this.getYouTubeVideoMetadata(videoId),
+    ]);
+
+    const content = transcript.reduce((acc, curr) => {
+      return acc + `${curr.text} `;
+    }, '');
+
+    const { categories, summary } = await this.extractYouTubeVideoInsights(
+      content,
+    );
+
+    return {
+      title,
+      creator,
+      videoLength,
+      categories,
+      summary,
+    };
+  }
+
+  private async getYouTubeVideoMetadata(
+    videoId: string,
+  ): Promise<YouTubeVideoMetadata> {
+    const url = `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=snippet,contentDetails&key=${process.env.YOUTUBE_API_KEY}`;
+    const response = await fetch(url);
+
+    const data = await response.json();
+    const item = data.items[0];
+
+    return {
+      title: item.snippet.title,
+      videoLength: getVideoLength(item.contentDetails.duration),
+      creator: item.snippet.channelTitle,
+    };
+
+    function getVideoLength(length: string): number {
+      // PT13M47S
+      // PT1H24M13S
+
+      if (!length.includes('M')) return 0;
+
+      if (!length.includes('H')) {
+        return Number(length.split('M')[0].split('PT')[1]);
+      }
+
+      const minutes = length.split('M')[0].split('H')[1];
+      const hours = length.split('H')[0].split('PT')[1];
+      return Number(hours) * 60 + Number(minutes);
+    }
   }
 
   async extractYouTubeVideoInsights(
