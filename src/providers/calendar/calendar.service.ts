@@ -3,18 +3,11 @@ import { AccountService } from '../../models/accounts/account.service';
 import { CreateEventDetails } from './calendar.entity';
 import { TimeSlot } from '../../types/types';
 import { google } from 'googleapis';
-import { OAuth } from './oauth.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
 import { OAuthTokenDetails } from '../../models/accounts/account.type';
 
 @Injectable()
 export class CalendarService {
-  constructor(
-    @Inject(AccountService) private accountService: AccountService,
-    @InjectRepository(OAuth)
-    private oAuthRepository: Repository<OAuth>,
-  ) {}
+  constructor(@Inject(AccountService) private accountService: AccountService) {}
 
   async getValidationUrl() {
     const oauth2Client = this.makeOAuth2Client();
@@ -56,25 +49,7 @@ export class CalendarService {
     );
   }
 
-  private async getAccessTokens(accountId: number): Promise<oAuthTokens> {
-    const record = await this.oAuthRepository
-      .createQueryBuilder('oauth')
-      .leftJoin('oauth.account', 'account')
-      .where('account.id = :accountId', { accountId })
-      .andWhere('oauth.valid = :valid', { valid: true })
-      .getOne();
-
-    if (record) {
-      return {
-        accessToken: record?.access_token,
-        refreshToken: record?.refresh_token,
-      };
-    }
-
-    return null;
-  }
-
-  private getAuthUrl(oauth2Client: anyy): string {
+  private getAuthUrl(oauth2Client: any): string {
     const url = oauth2Client.generateAuthUrl({
       // 'online' (default) or 'offline' (gets refresh_token)
       access_type: 'offline',

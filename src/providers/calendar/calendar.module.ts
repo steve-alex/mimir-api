@@ -6,7 +6,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { OAuth } from './oauth.entity';
 
 @Module({
-  imports: [AccountModule, TypeOrmModule.forFeature([OAuth])],
+  imports: [AccountModule],
   controllers: [CalendarController],
   providers: [CalendarService],
   exports: [CalendarService],
