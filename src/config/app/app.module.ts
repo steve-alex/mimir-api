@@ -29,7 +29,6 @@ import {
   ScheduleRepository,
 } from '../../models/schedule/schedule.entity';
 import { OAuth, OAuthRepository } from '../../providers/calendar/oauth.entity';
-import { JobModule } from '../../models/job/job.module';
 import { AvailabilityModule } from '../../models/availability/availability.module';
 
 @Module({
@@ -40,7 +39,6 @@ import { AvailabilityModule } from '../../models/availability/availability.modul
     CalendarModule,
     ContentModule,
     InsightsModule,
-    JobModule,
     NotionModule,
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({

@@ -3,6 +3,7 @@ import { OpenAIService } from '../openai/openai.service';
 import * as cheerio from 'cheerio';
 import {
   WebpageDetails,
+  YouTubeVideoDetails,
   YouTubeVideoInsights,
   YouTubeVideoMetadata,
 } from './insights.type';
