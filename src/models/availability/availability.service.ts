@@ -43,7 +43,9 @@ export class AvailabilityService {
 
     const availabilities = await this.availabilityRepository.find({ where });
 
-    return availabilities.map((a) => this.encodeAvailability(a));
+    return this.sortAvailabilitiesByDate(
+      availabilities.map((a) => this.encodeAvailability(a)),
+    );
   }
 
   async update(details: AvailabilityDTO): Promise<AvailabilityDTO> {
@@ -339,9 +341,21 @@ export class AvailabilityService {
       {},
       availability.id && { id: availability.id },
       availability.deleted && { deleted: availability.deleted },
-      availability.day_of_week && { dayOfWeek: availability.day_of_week },
+      availability.day_of_week && {
+        dayOfWeek: this.mapDayOfWeek(availability.day_of_week),
+      },
       availability.start_time && { startTime: availability.start_time },
       availability.end_time && { endTime: availability.end_time },
     );
+  }
+
+  private mapDayOfWeek(dayOfWeek: string): string {
+    if (dayOfWeek === '1') return 'Monday';
+    if (dayOfWeek === '2') return 'Tuesday';
+    if (dayOfWeek === '3') return 'Wednesday';
+    if (dayOfWeek === '4') return 'Thursday';
+    if (dayOfWeek === '5') return 'Friday';
+    if (dayOfWeek === '6') return 'Saturday';
+    if (dayOfWeek === '7') return 'Sunday';
   }
 }
