@@ -8,6 +8,7 @@ import {
   Get,
   Put,
   Delete,
+  Param,
 } from '@nestjs/common';
 import { AllExceptionsFilter } from '../../shared/exceptions';
 import { Response } from '../../types/types';
@@ -61,11 +62,12 @@ export class AvailabilityController {
   }
 
   @UseFilters(AllExceptionsFilter)
-  @Delete()
-  @HttpCode(201)
-  async deleteAvailability(body: AvailabilityDTO): Promise<Response<null>> {
-    const availabilityId = 1; // TODO revert to dynamic value
-    await this.availabilityService.delete(availabilityId);
+  @Delete(':id')
+  @HttpCode(204)
+  async deleteAvailability(
+    @Param('id') availabilityId: number,
+  ): Promise<Response<null>> {
+    console.log('availabilityId =>', availabilityId);
     return {
       statusCode: HttpStatus.OK,
       message: 'Availabilities successfully retrieved',
