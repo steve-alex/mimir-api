@@ -13,6 +13,10 @@ export class AvailabilityService {
   ) {}
 
   async create(details: AvailabilityDTO): Promise<AvailabilityDTO> {
+    console.log(
+      '🚀 ~ file: availability.service.ts:16 ~ AvailabilityService ~ create ~ details:',
+      details,
+    );
     const insert = {
       day_of_week: details.dayOfWeek,
       start_time: details.startTime,

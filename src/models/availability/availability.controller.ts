@@ -68,9 +68,10 @@ export class AvailabilityController {
     @Param('id') availabilityId: number,
   ): Promise<Response<null>> {
     console.log('availabilityId =>', availabilityId);
+    await this.availabilityService.delete(availabilityId);
     return {
       statusCode: HttpStatus.OK,
-      message: 'Availabilities successfully retrieved',
+      message: 'Availabilities successfully deleted',
       data: null,
     };
   }
