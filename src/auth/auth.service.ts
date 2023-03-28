@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { AccountService } from '../models/accounts/account.service';
-import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
@@ -10,15 +9,15 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async validateAccount(
+  async validate(
     email: string,
-    password: string,
+    accountId: number,
   ): Promise<{ email: string } | null> {
-    const account = await this.accountService.getAccount({ email });
+    const account = await this.accountService.getAccount({
+      email,
+      id: accountId,
+    });
     if (!account) return null;
-
-    const passwordValid = await bcrypt.compare(password, account.password);
-    if (!passwordValid) return null;
 
     return { email: account.email };
   }
@@ -28,7 +27,7 @@ export class AuthService {
     password: string,
   ): Promise<{ accessToken: string }> {
     const payload = { email, password };
-    const access_token = this.jwtService.sign(payload);
-    return { accessToken: access_token };
+    const accessToken = this.jwtService.sign(payload);
+    return { accessToken };
   }
 }
