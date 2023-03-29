@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -8,9 +8,8 @@ import { OAuth } from '../providers/calendar/oauth.entity';
 import { AccountService } from '../models/accounts/account.service';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
-import { LocalStrategy } from './local.auth';
-import { JwtStrategy } from './jwt.auth';
 import { AccountModule } from '../models/accounts/account.module';
+import { JwtMiddleware } from './jwt.auth';
 
 @Module({
   imports: [
@@ -23,7 +22,11 @@ import { AccountModule } from '../models/accounts/account.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, AccountService, JwtStrategy, LocalStrategy],
+  providers: [AuthService, AccountService],
   exports: [AuthService],
 })
-export class AuthModule {}
+export class AuthModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(JwtMiddleware).forRoutes('auth/test');
+  }
+}

@@ -1,28 +1,28 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { PassportStrategy } from '@nestjs/passport';
-import { Strategy, ExtractJwt } from 'passport-jwt';
-import { AuthService } from '../auth/auth.service';
+import { Injectable, NestMiddleware } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { NextFunction } from 'express';
+
+interface IRequest extends Request {
+  user?: {
+    email: string;
+  };
+}
 
 /**
  * A strategy for passport that uses JWT (JSON Web Token) for authentication
  * Pass in as decorator @UseGuards(AuthGuard('jwt')) above controller
  */
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(private readonly authService: AuthService) {
-    super({
-      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-      ignoreExpiration: false,
-      secretOrKey: process.env.JWT_SIGNING_SECRET,
-    });
-  }
+export class JwtMiddleware implements NestMiddleware {
+  constructor(private readonly jwtService: JwtService) {}
 
-  async validate(payload: JwtPayload) {
-    const { email, accountId } = payload;
-    const user = await this.authService.validate(email, accountId);
-    if (!user) {
-      throw new UnauthorizedException();
-    }
-    return user;
+  use(req: IRequest, res: Response, next: NextFunction) {
+    const headers = req.headers as { authorization?: string };
+    const token = headers.authorization.split(' ')[1];
+    const decoded = this.jwtService.verify(token, {
+      secret: process.env.JWT_SIGNING_SECRET,
+    });
+    req.user = decoded;
+    next();
   }
 }

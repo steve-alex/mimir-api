@@ -9,25 +9,16 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async validate(
-    email: string,
-    accountId: number,
-  ): Promise<{ email: string } | null> {
-    const account = await this.accountService.getAccount({
-      email,
-      id: accountId,
-    });
-    if (!account) return null;
-
-    return { email: account.email };
-  }
-
   async login(
     email: string,
     password: string,
   ): Promise<{ accessToken: string }> {
-    const payload = { email, password };
-    const accessToken = this.jwtService.sign(payload);
+    const payload = { email };
+    // TODO - actually log the user in (LOL)
+    const accessToken = this.jwtService.sign(payload, {
+      privateKey: process.env.JWT_SIGNING_SECRET,
+      expiresIn: '7 days',
+    });
     return { accessToken };
   }
 }
