@@ -16,17 +16,20 @@ export class AccountService {
   ) {}
 
   async createAccount(details: AccountDTO): Promise<AccountDTO> {
-    const { name, email, password } = details;
+    console.log(
+      '🚀 ~ file: account.service.ts:19 ~ AccountService ~ createAccount ~ details:',
+      details,
+    );
+    const { email, password } = details;
     const salt = 10;
 
     const hashedPassword = await bcrypt.hash(password, salt);
     const createResult = await this.accountRepository.insert({
-      name,
       email,
       password: hashedPassword,
     });
 
-    return { name, id: createResult.raw[0].id };
+    return { id: createResult.raw[0].id };
   }
 
   async getAccount(details: AccountDTO): Promise<AccountDTO> {
@@ -37,15 +40,14 @@ export class AccountService {
     if (name) searchParams.name = name;
     if (email) searchParams.email = email;
 
-    const account = await this.accountRepository.findOneBy(searchParams);
+    return this.accountRepository.findOneBy(searchParams);
 
-    return this.encodeAccont(account);
+    // TODO - enable sensitive param flag that deletes password
   }
 
   async updateAccount(details: AccountDTO): Promise<AccountDTO> {
     const updatedAccount = new Account();
     updatedAccount.id = details.id;
-    if (details?.name) updatedAccount.name = details.name;
     if (details?.email) updatedAccount.email = details.email;
     if (details?.password) {
       const salt = 10;
@@ -74,7 +76,6 @@ export class AccountService {
 
   private encodeAccont(accountDetails: Account): AccountDTO {
     const encodedAccount = Object.assign({}, accountDetails);
-    delete encodedAccount.password;
     return encodedAccount;
   }
 
