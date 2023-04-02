@@ -13,6 +13,9 @@ export class AvailabilityService {
   ) {}
 
   async create(details: AvailabilityDTO): Promise<AvailabilityDTO> {
+    if (details.startTime >= details.endTime)
+      throw new Error('Start time must be less that end time');
+
     const insert = {
       day_of_week: details.dayOfWeek,
       start_time: details.startTime,
