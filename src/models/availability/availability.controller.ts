@@ -13,7 +13,7 @@ import {
 import { AllExceptionsFilter } from '../../shared/exceptions';
 import { Response } from '../../types/types';
 import { AvailabilityService } from './availability.service';
-import { AvailabilityDTO } from './availability.type';
+import { AvailabilityDTO, CreateAvailabilityDTO } from './availability.type';
 
 @Controller('availability')
 export class AvailabilityController {
@@ -24,12 +24,14 @@ export class AvailabilityController {
   @HttpCode(201)
   async createAvailability(
     @Body() body: AvailabilityDTO,
-  ): Promise<Response<AvailabilityDTO>> {
-    const availability = await this.availabilityService.create(body);
+  ): Promise<Response<CreateAvailabilityDTO>> {
+    const { availability, idsToDelete } = await this.availabilityService.create(
+      body,
+    );
     return {
       statusCode: HttpStatus.OK,
       message: 'Availability successfully created',
-      data: availability,
+      data: { availability, idsToDelete },
     };
   }
 
@@ -39,7 +41,10 @@ export class AvailabilityController {
   async getAvailabilities(): Promise<Response<AvailabilityDTO[]>> {
     // TODO move this to account?
     const accountId = 1; // TODO revert to dynamic value
-    const availability = await this.availabilityService.list({ accountId });
+    const availability = await this.availabilityService.list({
+      accountId,
+      deleted: false,
+    });
     return {
       statusCode: HttpStatus.OK,
       message: 'Availabilities successfully retrieved',

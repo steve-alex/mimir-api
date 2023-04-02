@@ -11,3 +11,8 @@ export interface AvailabilityDTO {
   startTime?: string;
   endTime?: string;
 }
+
+export interface CreateAvailabilityDTO {
+  availability: AvailabilityDTO;
+  idsToDelete: number[];
+}

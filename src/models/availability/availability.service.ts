@@ -2,7 +2,7 @@ import { Repository } from 'typeorm';
 import { Availability } from './availability.entity';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { AvailabilityDTO } from './availability.type';
+import { AvailabilityDTO, CreateAvailabilityDTO } from './availability.type';
 import { TimeSlot } from '../../types/types';
 
 @Injectable()
@@ -12,16 +12,73 @@ export class AvailabilityService {
     private availabilityRepository: Repository<Availability>,
   ) {}
 
-  async create(details: AvailabilityDTO): Promise<AvailabilityDTO> {
-    if (details.startTime >= details.endTime)
-      throw new Error('Start time must be less that end time');
+  async create(
+    details: AvailabilityDTO,
+  ): Promise<{ availability: AvailabilityDTO; idsToDelete: number[] }> {
+    if (details.startTime >= details.endTime) {
+      throw new Error('Start time must be less than end time');
+    }
 
+    const existingAvailabilities = await this.availabilityRepository
+      .createQueryBuilder('availability')
+      .where('availability.day_of_week = :dayOfWeek', {
+        dayOfWeek: details.dayOfWeek,
+      })
+      .andWhere('availability.accountId = :accountId', {
+        accountId: details.accountId,
+      })
+      .andWhere('availability.deleted = false')
+      .getMany();
+
+    let mergedAvailability: AvailabilityDTO = {
+      dayOfWeek: details.dayOfWeek,
+      startTime: details.startTime,
+      endTime: details.endTime,
+      accountId: details.accountId,
+    };
+
+    const idsToDelete = [];
+    for (const availability of existingAvailabilities) {
+      if (
+        mergedAvailability.startTime <= availability.end_time &&
+        availability.start_time <= mergedAvailability.endTime
+      ) {
+        // Merge overlapping availabilities
+        mergedAvailability = {
+          ...mergedAvailability,
+          startTime:
+            availability.start_time < mergedAvailability.startTime
+              ? availability.start_time
+              : mergedAvailability.startTime,
+          endTime:
+            availability.end_time > mergedAvailability.endTime
+              ? availability.end_time
+              : mergedAvailability.endTime,
+          id: availability.id,
+        };
+
+        // Mark the old availability as deleted
+        await this.availabilityRepository.update(
+          { id: availability.id },
+          { deleted: true },
+        );
+        idsToDelete.push(availability.id);
+      } else if (
+        availability.start_time <= mergedAvailability.startTime &&
+        mergedAvailability.endTime <= availability.start_time
+      ) {
+        // The new availability is completely encapsulated by the existing one
+        continue;
+      }
+    }
+
+    // Insert the merged availability
     const insert = {
-      day_of_week: details.dayOfWeek,
-      start_time: details.startTime,
-      end_time: details.endTime,
+      day_of_week: mergedAvailability.dayOfWeek,
+      start_time: mergedAvailability.startTime,
+      end_time: mergedAvailability.endTime,
       deleted: false,
-      account: { id: details.accountId },
+      account: { id: mergedAvailability.accountId }
     };
 
     const response = await this.availabilityRepository
@@ -29,9 +86,13 @@ export class AvailabilityService {
       .insert()
       .into(Availability)
       .values(insert)
+      .returning('*')
       .execute();
 
-    return this.encodeAvailability(response.raw[0]);
+    return {
+      availability: this.encodeAvailability(response.raw[0]),
+      idsToDelete,
+    };
   }
 
   async list(details: AvailabilityDTO): Promise<AvailabilityDTO[]> {
