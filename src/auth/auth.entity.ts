@@ -7,3 +7,8 @@ export interface AccountLoginDTO {
   accessToken: string;
   accountId: number;
 }
+
+export interface authDTO {
+  email: string;
+  password: string;
+}

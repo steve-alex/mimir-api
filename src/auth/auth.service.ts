@@ -16,10 +16,6 @@ export class AuthService {
       email,
       password,
     });
-    console.log(
-      '🚀 ~ file: auth.service.ts:18 ~ AuthService ~ signup ~ response:',
-      response,
-    );
     const payload = { email };
     const accessToken = this.jwtService.sign(payload, {
       privateKey: process.env.JWT_SIGNING_SECRET,
@@ -32,18 +28,9 @@ export class AuthService {
     const payload = { email };
     const account = await this.accountService.getAccount({ email });
 
-    console.log(
-      '🚀 ~ file: auth.service.ts:34 ~ AuthService ~ login ~ account:',
-      account,
-    );
-
     if (!account) throw new Error('Unable to login');
 
     const isPasswordMatch = await bcrypt.compare(password, account.password);
-    console.log(
-      '🚀 ~ file: auth.service.ts:43 ~ AuthService ~ login ~ isPasswordMatch:',
-      isPasswordMatch,
-    );
 
     if (!isPasswordMatch) throw new Error('Unable to login');
 
