@@ -19,16 +19,7 @@ export class AuthController {
   @UseFilters(AllExceptionsFilter)
   @Post('auth/signup')
   async signup(@Body() body): Promise<Response<AccountLoginDTO>> {
-    console.log('signup!');
     const { email, password } = body;
-    console.log(
-      '🚀 ~ file: auth.controller.ts:21 ~ AuthController ~ signup ~ password:',
-      password,
-    );
-    console.log(
-      '🚀 ~ file: auth.controller.ts:21 ~ AuthController ~ signup ~ email:',
-      email,
-    );
     const data = await this.authService.signup(email, password);
     return {
       data,
@@ -41,22 +32,11 @@ export class AuthController {
   @Post('auth/login')
   async login(@Body() body): Promise<Response<AccountLoginDTO>> {
     const { email, password } = body;
-    console.log("🚀 ~ file: auth.controller.ts:44 ~ AuthController ~ login ~ password:", password)
-    console.log("🚀 ~ file: auth.controller.ts:44 ~ AuthController ~ login ~ email:", email)
     const data = await this.authService.login(email, password);
     return {
       data,
       message: 'Logged in successfully',
       statusCode: HttpStatus.OK,
     };
-  }
-
-  @Get('auth/test')
-  async test(@Request() req) {
-    try {
-      return 'It works';
-    } catch (err) {
-      console.log('err =>', err);
-    }
   }
 }
